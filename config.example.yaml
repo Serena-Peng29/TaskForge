@@ -1,0 +1,59 @@
+# Spark Agent Configuration
+# Copy this file to config.yaml and modify as needed
+
+# API Configuration
+api:
+  # Set your API key here or use OPENAI_API_KEY environment variable
+  key: ""
+  base_url: ""
+  model: ""
+  max_tokens: 100000
+  retry_attempts: 3
+  retry_delay: 1.0
+
+# Agent Configuration
+agent:
+  max_history_messages: 50
+  max_subagent_iterations: 20
+  command_timeout: 60
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"  # "json" or "text"
+  file: "agent.log"
+
+# Security Configuration
+security:
+  enable_path_validation: true
+  allowed_commands: []  # Empty means all non-blocked commands allowed
+
+# Web Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["*"]  # 生产环境应限制具体域名
+
+# Memory Configuration (mem0 + qdrant)
+memory:
+  qdrant_host: "localhost"
+  qdrant_port: 6333
+  collection_name: "toymagic_memories"
+  enable_auto_extract: true  # 是否自动从对话中提取记忆
+  # 阿里云 Embedding 配置
+  embedder_api_key: ""  # 填入您的 DashScope API Key
+  embedder_model: ""
+  embedder_base_url: ""
+
+# Web Search Configuration (Tavily)
+web_search:
+  enabled: true
+  api_key: ""  # 填入您的 Tavily API Key (https://tavily.com)
+  max_results: 5
+  search_depth: "basic"  # "basic" or "advanced"
+
+# MCP Configuration (Model Context Protocol)
+# MCP 配置通过前端管理，存储在 mcp_config.json 中
+# 可在此预定义服务器（可选）
+mcp:
+  servers: {}  # 格式: {server-name: {command: "...", env: {}}}
