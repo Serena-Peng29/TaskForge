@@ -9,33 +9,21 @@ import argparse
 from configurable import get_config, init_config, logger
 CONFIG = get_config()
 
-from SkillLoader import get_skills, SKILLS as _SKILLS
-SKILLS = _SKILLS or get_skills()
+from skill_loader import SKILLS
+from agents import AGENT_TYPES, get_agent_descriptions, agent_loop, TOKEN_USAGE
+from memory import get_memory
+MEMORY = get_memory()
 
-from Agents import AGENT_TYPES, get_agent_descriptions, agent_loop, TOKEN_USAGE
-from memory import get_memory, MEMORY as _MEMORY
-MEMORY = _MEMORY or get_memory()
-
-from TodoManager import TODO
+from todo_manager import TODO
+from api.deps import DEFAULT_SYSTEM_PROMPT
 
 
-SYSTEM_PROMPT = f"""You are a coding agent at {CONFIG.workdir}.
-
-Loop: plan -> act with tools -> report.
-
-**Skills available** (invoke with Skill tool when task matches):
-{SKILLS.get_descriptions()}
-
-**Subagents available** (invoke with Task tool for focused subtasks):
-{get_agent_descriptions()}
-
-Rules:
-- Use Skill tool IMMEDIATELY when a task matches a skill description
-- Use Task tool for subtasks needing focused exploration or implementation
-- Use TodoWrite to track multi-step work
-- Prefer tools over prose. Act, don't just explain.
-- After finishing, summarize what changed."""
-
+def get_system_prompt() -> str:
+    return DEFAULT_SYSTEM_PROMPT.format(
+        workdir=str(CONFIG.workdir),
+        skills=SKILLS.get_descriptions(),
+        agents=get_agent_descriptions()
+    )
 
 def print_banner():
     """打印启动信息"""
@@ -97,7 +85,7 @@ def main():
     print_banner()
 
     # 初始化历史记录
-    history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    history = [{"role": "system", "content": get_system_prompt()}]
 
     # 启动钩子: 尝试加载上次对话
     last_session = MEMORY.load_last_session()
@@ -106,7 +94,7 @@ def main():
         try:
             load_choice = input("Load previous session? [y/N]: ").strip().lower()
             if load_choice in ("y", "yes"):
-                history = [{"role": "system", "content": SYSTEM_PROMPT}] + last_session
+                history = [{"role": "system", "content": get_system_prompt()}] + last_session
                 print(f"[Memory] Loaded {len(last_session)} messages from previous session")
             else:
                 print("[Memory] Starting fresh session")
@@ -135,7 +123,7 @@ def main():
                 break
 
             if cmd == "clear":
-                history = [{"role": "system", "content": SYSTEM_PROMPT}]
+                history = [{"role": "system", "content": get_system_prompt()}]
                 MEMORY.clear_session()
                 print("History cleared.")
                 continue
@@ -157,7 +145,7 @@ def main():
             if cmd == "load":
                 last_session = MEMORY.load_last_session()
                 if last_session:
-                    history = [{"role": "system", "content": SYSTEM_PROMPT}] + last_session
+                    history = [{"role": "system", "content": get_system_prompt()}] + last_session
                     print(f"[Memory] Loaded {len(last_session)} messages")
                 else:
                     print("[Memory] No session to load")

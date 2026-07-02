@@ -37,7 +37,7 @@ export function ConfigModal({
   useEffect(() => {
     if (config) {
       setSelectedModel(config.model);
-      setApiKey(config.api_key || '');
+      setApiKey('');
       setBaseUrl(config.base_url || '');
       setTemperature(config.temperature ?? 0.7);
       setEnabledItems(new Set(
@@ -90,12 +90,15 @@ export function ConfigModal({
     setIsSaving(true);
     try {
       if (type === 'model') {
-        await onUpdateConfig({
+        const nextConfig: Partial<AppConfig> = {
           model: selectedModel,
-          api_key: apiKey,
           base_url: baseUrl,
           temperature,
-        });
+        };
+        if (apiKey.trim()) {
+          nextConfig.api_key = apiKey.trim();
+        }
+        await onUpdateConfig(nextConfig);
       } else if (type === 'skills') {
         await onUpdateConfig({
           enabled_skills: Array.from(enabledItems),

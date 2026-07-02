@@ -47,6 +47,9 @@ agent.log
 memory/
 output/
 config.yaml
+mcp_config.json
+frontend/node_modules/
+frontend/dist/
 *.local
 
 # OS

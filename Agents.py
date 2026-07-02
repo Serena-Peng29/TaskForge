@@ -9,8 +9,8 @@ import sys
 import json
 
 from configurable import get_config, logger
-from SkillLoader import SKILLS
-from TodoManager import TODO
+from skill_loader import SKILLS
+from todo_manager import TODO
 from tools.base import TOOLS, ToolResult
 from tools.builtin import register_builtin_tools
 from errors import (

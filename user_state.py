@@ -8,7 +8,7 @@ from typing import Dict, Optional, List, Any
 from dataclasses import dataclass, field
 
 from configurable import Config, get_config
-from Agents import AgentClient
+from agents import AgentClient
 from mcp_manager import MCPManager
 
 logger = logging.getLogger(__name__)

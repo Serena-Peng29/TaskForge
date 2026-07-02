@@ -8,8 +8,8 @@ import json
 import time
 
 from .base import BaseTool, ToolResult, TOOLS
-from SecurityChecker import SECURITY
-from SkillLoader import SkillLoader
+from security_checker import SECURITY
+from skill_loader import SkillLoader
 from .websearch import WebSearchTool
 
 

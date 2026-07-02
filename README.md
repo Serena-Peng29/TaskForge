@@ -1,4 +1,4 @@
-# PyCode Agent
+# Spark Agent
 
 基于 OpenAI SDK 的 AI 编码助手框架。
 
@@ -42,25 +42,42 @@ export OPENAI_BASE_URL="your-base-url"
 python main.py
 ```
 
+启动 Web API：
+
+```bash
+python main.py --web
+```
+
 ## 项目结构
 
 ```
 .
-├── main.py              # 主入口
-├── configurable.py      # 配置管理
-├── Agents.py            # Agent 核心逻辑
-├── tools/               # 工具系统
-│   ├── __init__.py
-│   ├── base.py          # 工具基类
-│   └── builtin.py       # 内置工具
-├── skills/              # 技能模块
-├── memory.py            # 会话管理
-├── SecurityChecker.py   # 安全检查
-├── TodoManager.py       # 任务管理
-├── errors.py            # 异常处理
-├── compression.py       # 上下文压缩
-└── tests/               # 测试
+├── main.py                # CLI / Web 启动入口
+├── api/                   # FastAPI 应用、路由和请求/响应模型
+│   ├── app.py             # FastAPI app 组装
+│   ├── deps.py            # 共享依赖、认证和状态上下文
+│   ├── schemas.py         # Pydantic 模型
+│   └── routers/           # auth/chat/config/mcp/memory/session 路由
+├── tools/                 # 工具系统
+│   ├── base.py            # 工具基类和注册表
+│   ├── builtin.py         # 内置工具
+│   └── websearch.py       # Web 搜索工具
+├── frontend/              # React/Vite 前端
+├── scripts/               # 辅助脚本
+├── skills/                # 内置技能包
+├── tests/                 # 后端测试
+├── agents.py              # Agent 核心逻辑
+├── auth.py                # 认证和 JWT 管理
+├── configurable.py        # 配置管理
+├── memory.py              # 会话和长期记忆
+├── mcp_manager.py         # MCP server 连接和工具包装
+├── security_checker.py    # 命令安全检查
+├── skill_loader.py        # 技能加载器
+├── todo_manager.py        # 任务列表管理
+└── user_state.py          # 用户状态隔离
 ```
+
+根目录保留启动入口、项目配置和当前尚未拆包的核心模块。新的 Web API 代码以 `api/` 包为准；旧的单文件 `api.py` 已移除，避免和 `api/` 包产生重复入口。
 
 ## 内置命令
 
@@ -128,7 +145,8 @@ Skill instructions here...
 ## 测试
 
 ```bash
-pytest tests/
+python -m pytest -q
+cd frontend && npm run build
 ```
 
 ## 许可证

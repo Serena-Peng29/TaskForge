@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spark Maintenance"
+  short_description: "Maintain and harden the Spark agent app"
+  default_prompt: "Use $spark-maintenance to audit and improve the Spark project."

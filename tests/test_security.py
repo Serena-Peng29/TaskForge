@@ -2,7 +2,7 @@
 安全检查器测试
 """
 import pytest
-from SecurityChecker import SecurityChecker
+from security_checker import SecurityChecker
 
 
 class TestSecurityChecker:
