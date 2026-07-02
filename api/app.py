@@ -6,13 +6,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from configurable import get_config, logger
-from skill_loader import SKILLS
-from agents import AgentClient
-from memory import get_memory
-from mcp_manager import get_mcp_manager
-from auth import init_auth, AUTH_AVAILABLE
-from user_state import StateManager, UserState
+from spark.config import get_config, logger
+from spark.skills.loader import SKILLS
+from spark.core.agents import AgentClient
+from spark.services.memory import get_memory
+from spark.integrations.mcp_manager import get_mcp_manager
+from spark.services.auth import init_auth, AUTH_AVAILABLE
+from spark.services.user_state import StateManager, UserState
 
 CONFIG = get_config()
 MEMORY = get_memory()

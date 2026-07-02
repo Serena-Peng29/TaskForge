@@ -5,8 +5,8 @@ from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends, status
 
-from auth import get_user_manager, get_jwt_manager, AUTH_AVAILABLE
-from configurable import get_config
+from spark.services.auth import get_user_manager, get_jwt_manager, AUTH_AVAILABLE
+from spark.config import get_config
 from api.schemas import UserRegister, UserLogin, TokenResponse, UserInfo
 from api.deps import get_current_user_optional, get_current_user
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserInfo)
 async def register(request: UserRegister):
-    from auth import UserExistsError, AuthError
+    from spark.services.auth import UserExistsError, AuthError
 
     user_manager = get_user_manager()
     if not user_manager or not user_manager.is_available():

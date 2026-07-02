@@ -7,9 +7,9 @@ import logging
 from typing import Dict, Optional, List, Any
 from dataclasses import dataclass, field
 
-from configurable import Config, get_config
-from agents import AgentClient
-from mcp_manager import MCPManager
+from spark.config import Config, get_config
+from spark.core.agents import AgentClient
+from spark.integrations.mcp_manager import MCPManager
 
 logger = logging.getLogger(__name__)
 

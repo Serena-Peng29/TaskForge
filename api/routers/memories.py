@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends
 
-from memory import get_memory
+from spark.services.memory import get_memory
 from api.schemas import MemoryAddRequest, MemorySearchRequest, MemoryUpdateRequest
 from api.deps import get_current_user_optional
 

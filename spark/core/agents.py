@@ -8,12 +8,12 @@ import time
 import sys
 import json
 
-from configurable import get_config, logger
-from skill_loader import SKILLS
-from todo_manager import TODO
+from spark.config import get_config, logger
+from spark.skills.loader import SKILLS
+from spark.services.todo_manager import TODO
 from tools.base import TOOLS, ToolResult
 from tools.builtin import register_builtin_tools
-from errors import (
+from spark.core.errors import (
     AgentError, APIError, ToolExecutionError,
     handle_errors, ErrorContext
 )

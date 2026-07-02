@@ -53,6 +53,14 @@ python main.py --web
 ```
 .
 ├── main.py                # CLI / Web 启动入口
+├── spark/                 # 后端运行时包
+│   ├── cli.py             # CLI 主逻辑
+│   ├── config.py          # 配置管理
+│   ├── core/              # Agent、压缩、错误处理
+│   ├── services/          # 认证、记忆、用户状态、任务管理
+│   ├── integrations/      # MCP 等外部集成
+│   ├── security/          # 安全检查
+│   └── skills/            # 技能加载器
 ├── api/                   # FastAPI 应用、路由和请求/响应模型
 │   ├── app.py             # FastAPI app 组装
 │   ├── deps.py            # 共享依赖、认证和状态上下文
@@ -65,19 +73,10 @@ python main.py --web
 ├── frontend/              # React/Vite 前端
 ├── scripts/               # 辅助脚本
 ├── skills/                # 内置技能包
-├── tests/                 # 后端测试
-├── agents.py              # Agent 核心逻辑
-├── auth.py                # 认证和 JWT 管理
-├── configurable.py        # 配置管理
-├── memory.py              # 会话和长期记忆
-├── mcp_manager.py         # MCP server 连接和工具包装
-├── security_checker.py    # 命令安全检查
-├── skill_loader.py        # 技能加载器
-├── todo_manager.py        # 任务列表管理
-└── user_state.py          # 用户状态隔离
+└── tests/                 # 后端测试
 ```
 
-根目录保留启动入口、项目配置和当前尚未拆包的核心模块。新的 Web API 代码以 `api/` 包为准；旧的单文件 `api.py` 已移除，避免和 `api/` 包产生重复入口。
+根目录保留启动入口、项目配置和文档。后端运行时模块集中在 `spark/` 包；Web API 代码以 `api/` 包为准。
 
 ## 内置命令
 

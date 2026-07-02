@@ -1,4 +1,4 @@
-from configurable import logger
+from spark.config import logger
 import re
 
 class SecurityChecker:

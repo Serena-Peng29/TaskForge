@@ -38,7 +38,10 @@ json-logging = [
 ]
 
 [project.scripts]
-pycode-agent = "main:main"
+pycode-agent = "spark.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["spark*", "api*", "tools*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

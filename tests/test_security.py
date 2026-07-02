@@ -2,7 +2,7 @@
 安全检查器测试
 """
 import pytest
-from security_checker import SecurityChecker
+from spark.security.checker import SecurityChecker
 
 
 class TestSecurityChecker:

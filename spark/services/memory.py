@@ -35,7 +35,7 @@ class Mem0Client:
             return
 
         try:
-            from configurable import get_config
+            from spark.config import get_config
             config = get_config()
 
             # 配置 mem0 使用 qdrant 作为向量存储，阿里云作为 embedder
@@ -718,7 +718,7 @@ def get_memory():
     """获取内存管理器实例"""
     global _MEMORY
     if _MEMORY is None:
-        from configurable import get_config
+        from spark.config import get_config
         config = get_config()
         _MEMORY = MemoryManager(
             memory_dir=config.workdir / "memory",
