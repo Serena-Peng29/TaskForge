@@ -142,11 +142,11 @@ export async function getSession(sessionId: string): Promise<{ messages: Message
   return response.json();
 }
 
-export async function createSession(title?: string): Promise<Session> {
+export async function createSession(title?: string, workspaceId?: string): Promise<Session> {
   const response = await authFetch(`${API_BASE}/sessions/new`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, workspace_id: workspaceId }),
   });
   if (!response.ok) throw new Error('Failed to create session');
   return response.json();
@@ -170,6 +170,15 @@ export async function renameSession(sessionId: string, title: string): Promise<v
     body: JSON.stringify({ title }),
   });
   if (!response.ok) throw new Error('Failed to rename session');
+}
+
+export async function moveSession(sessionId: string, workspaceId: string): Promise<void> {
+  const response = await authFetch(`${API_BASE}/sessions/${sessionId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ workspace_id: workspaceId }),
+  });
+  if (!response.ok) throw new Error('Failed to move session');
 }
 
 export async function loadLastSession(): Promise<{ status: string; session_id?: string; message_count?: number }> {

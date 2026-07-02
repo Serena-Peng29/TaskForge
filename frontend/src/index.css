@@ -12,6 +12,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #fff7fb;
 }
 
 /* Custom scrollbar */
@@ -20,16 +21,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
+  background: #f9a8d4;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+  background: #ec4899;
+}
+
+.taskforge-canvas-bg {
+  background:
+    radial-gradient(circle at 86% 8%, rgba(236, 72, 153, 0.12) 0 1px, transparent 1px),
+    radial-gradient(circle at 9% 78%, rgba(236, 72, 153, 0.13) 0 1px, transparent 1px),
+    linear-gradient(135deg, rgba(255, 247, 251, 0.95), rgba(255, 255, 255, 0.68));
+  background-size: 14px 14px, 14px 14px, 100% 100%;
 }
 
 /* Markdown styles */
@@ -38,7 +47,8 @@ body {
 }
 
 .markdown-content pre {
-  background-color: #1e1e1e;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
   padding: 1rem;
   border-radius: 0.5rem;
   overflow-x: auto;
@@ -51,7 +61,8 @@ body {
 }
 
 .markdown-content p code {
-  background-color: #2d2d2d;
+  background-color: #fdf2f8;
+  color: #be185d;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
 }
@@ -75,8 +86,8 @@ body {
 }
 
 .markdown-content blockquote {
-  border-left: 3px solid #4a9eff;
+  border-left: 3px solid #ec4899;
   padding-left: 1rem;
   margin: 0.5rem 0;
-  color: #9ca3af;
+  color: #64748b;
 }

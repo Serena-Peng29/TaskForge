@@ -119,13 +119,16 @@ export function useChat() {
 
   // ==================== 会话管理 ====================
 
-  const createNewSession = useCallback(async (title?: string) => {
+  const createNewSession = useCallback(async (title?: string, workspaceId?: string) => {
     try {
-      const session = await api.createSession(title);
-      setSessions(prev => [session, ...prev]);
+      const session = await api.createSession(title, workspaceId);
+      const scopedSession = workspaceId && !session.workspace_id
+        ? { ...session, workspace_id: workspaceId }
+        : session;
+      setSessions(prev => [scopedSession, ...prev]);
       setCurrentSessionId(session.id);
       setMessages([]);
-      return session;
+      return scopedSession;
     } catch (error) {
       console.error('Failed to create session:', error);
       throw error;

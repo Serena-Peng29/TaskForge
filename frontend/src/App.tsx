@@ -88,10 +88,23 @@ function App() {
     await loadConfig();
   };
 
+  const handlePickAndAddWorkspace = async () => {
+    try {
+      const picked = await api.pickWorkspaceDirectory();
+      if (!picked.path || picked.cancelled) return;
+      await handleAddWorkspace(picked.path);
+      await loadSessions();
+      await loadStatus();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '添加工作区失败');
+    }
+  };
+
   const handleSelectWorkspace = async (workspaceId: string) => {
     await api.activateWorkspace(workspaceId);
     await loadWorkspaces();
     await loadConfig();
+    await loadSessions();
     await loadHistory();
     await loadStatus();
   };
@@ -103,9 +116,16 @@ function App() {
     await loadConfig();
   };
 
-  const handleCreateSession = async () => {
+  const handleCreateSession = async (workspaceId?: string) => {
     try {
-      await createNewSession();
+      if (workspaceId && workspaceId !== activeWorkspace?.id) {
+        await api.activateWorkspace(workspaceId);
+        await loadWorkspaces();
+        await loadConfig();
+      }
+      await createNewSession(undefined, workspaceId || activeWorkspace?.id);
+      await loadSessions();
+      await loadStatus();
     } catch (error) {
       console.error('Failed to create session:', error);
     }
@@ -164,10 +184,10 @@ function App() {
   // 认证加载中
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-950 text-gray-100">
+      <div className="h-screen flex items-center justify-center bg-[#fff7fb] text-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">加载中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-slate-500">加载中...</p>
         </div>
       </div>
     );
@@ -187,7 +207,7 @@ function App() {
   }
 
   return (
-    <div className="h-screen flex bg-gray-950 text-gray-100 relative">
+    <div className="h-screen flex bg-[#fff7fb] text-slate-900 relative overflow-hidden">
       <Sidebar
         skills={skills}
         status={status}
@@ -195,8 +215,12 @@ function App() {
         currentSessionId={currentSessionId}
         config={config}
         tools={tools}
+        workspaces={workspaces}
+        activeWorkspace={activeWorkspace}
         onSelectSession={handleSelectSession}
         onCreateSession={handleCreateSession}
+        onSelectWorkspace={handleSelectWorkspace}
+        onAddWorkspace={handlePickAndAddWorkspace}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
         onUpdateConfig={updateAppConfig}
@@ -212,10 +236,7 @@ function App() {
         onStop={stopStreaming}
         uploadedFiles={uploadedFiles}
         onFilesChange={setUploadedFiles}
-        workspaces={workspaces}
         activeWorkspace={activeWorkspace}
-        onAddWorkspace={handleAddWorkspace}
-        onSelectWorkspace={handleSelectWorkspace}
         onPermissionChange={handlePermissionChange}
       />
       <FilePanel

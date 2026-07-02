@@ -40,14 +40,17 @@ class SessionInfo(BaseModel):
     created_at: str
     updated_at: str
     message_count: int
+    workspace_id: Optional[str] = None
 
 
 class SessionCreate(BaseModel):
     title: Optional[str] = None
+    workspace_id: Optional[str] = None
 
 
 class SessionUpdate(BaseModel):
     title: Optional[str] = None
+    workspace_id: Optional[str] = None
 
 
 class ConfigUpdate(BaseModel):

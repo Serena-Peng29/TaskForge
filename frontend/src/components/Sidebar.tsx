@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Session, Skill, Status, AppConfig, User } from '../types';
+import { Session, Skill, Status, AppConfig, User, Workspace } from '../types';
 import { SessionList } from './SessionList';
 import { ConfigModal } from './ConfigModal';
 import { PromptModal } from './PromptModal';
 import { MCPModal } from './MCPModal';
 import {
   Zap,
-  ChevronLeft,
+  PanelLeftClose,
+  ChevronDown,
   ChevronRight,
   Activity,
   Cpu,
@@ -25,8 +26,12 @@ interface SidebarProps {
   currentSessionId: string | null;
   config: AppConfig | null;
   tools: { name: string; description: string; enabled: boolean }[];
+  workspaces: Workspace[];
+  activeWorkspace: Workspace | null;
   onSelectSession: (sessionId: string) => void;
-  onCreateSession: () => void;
+  onCreateSession: (workspaceId?: string) => void;
+  onSelectWorkspace: (workspaceId: string) => void;
+  onAddWorkspace: () => void;
   onDeleteSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, title: string) => void;
   onUpdateConfig: (config: Partial<AppConfig>) => Promise<void>;
@@ -41,8 +46,12 @@ export function Sidebar({
   currentSessionId,
   config,
   tools,
+  workspaces,
+  activeWorkspace,
   onSelectSession,
   onCreateSession,
+  onSelectWorkspace,
+  onAddWorkspace,
   onDeleteSession,
   onRenameSession,
   onUpdateConfig,
@@ -51,6 +60,7 @@ export function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [modalType, setModalType] = useState<'model' | 'skills' | 'tools' | 'prompt' | 'mcp' | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
     <>
@@ -58,19 +68,20 @@ export function Sidebar({
       <div
         className={`${
           isCollapsed ? 'w-0' : 'w-72'
-        } bg-gray-900 border-r border-gray-700 flex flex-col transition-all duration-300 overflow-hidden flex-shrink-0`}
+        } bg-white/70 border-r border-pink-100/80 shadow-[18px_0_50px_rgba(236,72,153,0.08)] backdrop-blur-xl flex flex-col transition-all duration-300 overflow-hidden flex-shrink-0`}
       >
         {/* 头部 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-500" />
+        <div className="flex items-center justify-between px-6 py-8">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <Zap className="w-6 h-6 fill-pink-500 text-pink-500" />
             TaskForge
           </h2>
           <button
             onClick={() => setIsCollapsed(true)}
-            className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-pink-50 rounded-lg transition-colors"
+            title="收起侧边栏"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-400" />
+            <PanelLeftClose className="w-4 h-4 text-slate-500" />
           </button>
         </div>
 
@@ -78,7 +89,11 @@ export function Sidebar({
         <div className="flex-1 overflow-hidden">
           <SessionList
             sessions={sessions}
+            workspaces={workspaces}
+            activeWorkspace={activeWorkspace}
             currentSessionId={currentSessionId}
+            onSelectWorkspace={onSelectWorkspace}
+            onAddWorkspace={onAddWorkspace}
             onSelectSession={onSelectSession}
             onCreateSession={onCreateSession}
             onDeleteSession={onDeleteSession}
@@ -86,117 +101,52 @@ export function Sidebar({
           />
         </div>
 
-        {/* 底部配置区域 */}
-        <div className="border-t border-gray-700">
-          {/* 模型配置入口 */}
-          <button
-            onClick={() => setModalType('model')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium text-gray-300">模型</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 truncate max-w-[100px]">
-                {config?.available_models.find((m) => m.id === config?.model)?.name || config?.model || '未设置'}
-              </span>
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            </div>
-          </button>
-
-          {/* 技能配置入口 */}
-          <button
-            onClick={() => setModalType('skills')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-green-400" />
-              <span className="text-sm font-medium text-gray-300">技能</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">
-                {config?.enabled_skills.length || 0}/{skills.length}
-              </span>
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            </div>
-          </button>
-
-          {/* 工具配置入口 */}
-          <button
-            onClick={() => setModalType('tools')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Wrench className="w-4 h-4 text-orange-400" />
-              <span className="text-sm font-medium text-gray-300">工具</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">
-                {config?.enabled_tools.length || 0}/{tools.length}
-              </span>
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-            </div>
-          </button>
-
-          {/* Prompt 配置入口 */}
-          <button
-            onClick={() => setModalType('prompt')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-purple-400" />
-              <span className="text-sm font-medium text-gray-300">Prompt</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-500" />
-          </button>
-
-          {/* MCP 配置入口 */}
-          <button
-            onClick={() => setModalType('mcp')}
-            className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Server className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-medium text-gray-300">MCP</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-500" />
-          </button>
-
-          {/* Token 使用量 */}
-          {status && (
-            <div className="p-3 border-t border-gray-800">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Activity className="w-3.5 h-3.5" />
-                <span>
-                  {status.token_usage.input.toLocaleString()} 入 /
-                  {status.token_usage.output.toLocaleString()} 出
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* 用户信息 */}
-          {user && onLogout && (
-            <div className="p-3 border-t border-gray-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <UserIcon className="w-4 h-4 text-white" />
+        <div className="border-t border-pink-100/80 bg-white/50">
+          {user && onLogout ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(prev => !prev)}
+                className="w-full px-6 py-5 hover:bg-pink-50/70 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center font-bold text-lg">
+                      {user.username.slice(0, 1).toUpperCase() || <UserIcon className="w-4 h-4" />}
+                    </div>
+                    <span className="text-base font-semibold text-slate-700 truncate">
+                      {user.username}
+                    </span>
                   </div>
-                  <span className="text-sm text-gray-300 truncate max-w-[120px]">
-                    {user.username}
-                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform ${
+                      isUserMenuOpen ? 'rotate-180' : ''
+                    }`}
+                  />
                 </div>
-                <button
-                  onClick={onLogout}
-                  className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
-                  title="登出"
-                >
-                  <LogOut className="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
-            </div>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="border-t border-pink-100/80">
+                  <SidebarSettings
+                    skills={skills}
+                    status={status}
+                    config={config}
+                    tools={tools}
+                    onOpenModal={setModalType}
+                    onLogout={onLogout}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <SidebarSettings
+              skills={skills}
+              status={status}
+              config={config}
+              tools={tools}
+              onOpenModal={setModalType}
+            />
           )}
         </div>
       </div>
@@ -205,9 +155,9 @@ export function Sidebar({
       {isCollapsed && (
         <button
           onClick={() => setIsCollapsed(false)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-gray-900 border border-gray-700 border-l-0 rounded-r-lg hover:bg-gray-800 transition-colors z-10"
+          className="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-white border border-pink-100 border-l-0 rounded-r-lg hover:bg-pink-50 transition-colors z-10"
         >
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="w-5 h-5 text-slate-500" />
         </button>
       )}
 
@@ -233,6 +183,120 @@ export function Sidebar({
         isOpen={modalType === 'mcp'}
         onClose={() => setModalType(null)}
       />
+    </>
+  );
+}
+
+interface SidebarSettingsProps {
+  skills: Skill[];
+  status: Status | null;
+  config: AppConfig | null;
+  tools: { name: string; description: string; enabled: boolean }[];
+  onOpenModal: (type: 'model' | 'skills' | 'tools' | 'prompt' | 'mcp') => void;
+  onLogout?: () => void;
+}
+
+function SidebarSettings({
+  skills,
+  status,
+  config,
+  tools,
+  onOpenModal,
+  onLogout,
+}: SidebarSettingsProps) {
+  return (
+    <>
+      <button
+        onClick={() => onOpenModal('model')}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-pink-50/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-pink-500" />
+          <span className="text-sm font-medium text-slate-800">模型</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500 truncate max-w-[100px]">
+            {config?.available_models.find((m) => m.id === config?.model)?.name || config?.model || '未设置'}
+          </span>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </div>
+      </button>
+
+      <button
+        onClick={() => onOpenModal('skills')}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-pink-50/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-pink-500" />
+          <span className="text-sm font-medium text-slate-800">技能</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">
+            {config?.enabled_skills.length || 0}/{skills.length}
+          </span>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </div>
+      </button>
+
+      <button
+        onClick={() => onOpenModal('tools')}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-pink-50/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Wrench className="w-4 h-4 text-pink-500" />
+          <span className="text-sm font-medium text-slate-800">工具</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">
+            {config?.enabled_tools.length || 0}/{tools.length}
+          </span>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </div>
+      </button>
+
+      <button
+        onClick={() => onOpenModal('prompt')}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-pink-50/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-pink-500" />
+          <span className="text-sm font-medium text-slate-800">Prompt</span>
+        </div>
+        <ChevronRight className="w-4 h-4 text-slate-400" />
+      </button>
+
+      <button
+        onClick={() => onOpenModal('mcp')}
+        className="w-full flex items-center justify-between px-6 py-3 hover:bg-pink-50/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Server className="w-4 h-4 text-pink-500" />
+          <span className="text-sm font-medium text-slate-800">MCP</span>
+        </div>
+        <ChevronRight className="w-4 h-4 text-slate-400" />
+      </button>
+
+      {status && (
+        <div className="px-6 py-4 border-t border-pink-100/80">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Activity className="w-3.5 h-3.5" />
+            <span>
+              {status.token_usage.input.toLocaleString()} 入 /
+              {status.token_usage.output.toLocaleString()} 出
+            </span>
+          </div>
+        </div>
+      )}
+
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-2 px-6 py-3 border-t border-pink-100/80 text-sm text-slate-500 hover:bg-pink-50/80 hover:text-slate-800 transition-colors"
+        >
+          <LogOut className="w-4 h-4 text-slate-400" />
+          退出登录
+        </button>
+      )}
     </>
   );
 }

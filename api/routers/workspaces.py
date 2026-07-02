@@ -60,7 +60,6 @@ def _pick_directory_native() -> str | None:
 def _apply_workspace(workspace_id: str, current_user: Optional[Dict[str, Any]]) -> dict[str, Any]:
     store = _store()
     current_state = get_state_for_user(current_user)
-    current_session_id = current_state.current_session_id
     user_id = _get_user_id(current_user)
     if current_state.current_session_id and len(current_state.history) > 1:
         MEMORY.save_session_by_id(current_state.current_session_id, current_state.history, user_id)
@@ -75,19 +74,18 @@ def _apply_workspace(workspace_id: str, current_user: Optional[Dict[str, Any]]) 
         raise HTTPException(status_code=400, detail=str(e))
 
     current_state.reset_runtime(CONFIG)
+    workspace_sessions = [
+        session for session in MEMORY.list_sessions(user_id)
+        if session.workspace_id == workspace_id
+    ]
+    current_session_id = workspace_sessions[0].id if workspace_sessions else None
     current_state.current_session_id = current_session_id
     set_current_state(current_state)
     if current_session_id:
         session_data = MEMORY.get_session(current_session_id, user_id)
         current_state.history = [{"role": "system", "content": get_system_prompt()}] + (session_data or {}).get("messages", [])
     else:
-        sessions = MEMORY.list_sessions(user_id)
-        if sessions:
-            current_state.current_session_id = sessions[0].id
-            session_data = MEMORY.get_session(sessions[0].id, user_id)
-            current_state.history = [{"role": "system", "content": get_system_prompt()}] + (session_data or {}).get("messages", [])
-        else:
-            current_state.history = [{"role": "system", "content": get_system_prompt()}]
+        current_state.history = [{"role": "system", "content": get_system_prompt()}]
     logger.info(f"Activated workspace {workspace.name}: {path}")
     return workspace.to_dict(path)
 

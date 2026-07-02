@@ -14,12 +14,21 @@ logger = logging.getLogger(__name__)
 
 class SessionInfo:
     """会话元信息"""
-    def __init__(self, id: str, title: str, created_at: str, updated_at: str, message_count: int = 0):
+    def __init__(
+        self,
+        id: str,
+        title: str,
+        created_at: str,
+        updated_at: str,
+        message_count: int = 0,
+        workspace_id: str | None = None,
+    ):
         self.id = id
         self.title = title
         self.created_at = created_at
         self.updated_at = updated_at
         self.message_count = message_count
+        self.workspace_id = workspace_id
 
     def to_dict(self) -> dict:
         return {
@@ -27,7 +36,8 @@ class SessionInfo:
             "title": self.title,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
-            "message_count": self.message_count
+            "message_count": self.message_count,
+            "workspace_id": self.workspace_id,
         }
 
     @classmethod
@@ -37,7 +47,8 @@ class SessionInfo:
             title=data["title"],
             created_at=data["created_at"],
             updated_at=data["updated_at"],
-            message_count=data.get("message_count", 0)
+            message_count=data.get("message_count", 0),
+            workspace_id=data.get("workspace_id"),
         )
 
 
@@ -187,7 +198,7 @@ class MemoryManager:
         sessions.sort(key=lambda s: s.updated_at, reverse=True)
         return sessions
 
-    def create_session(self, title: str = None, user_id: str = None) -> str:
+    def create_session(self, title: str = None, user_id: str = None, workspace_id: str | None = None) -> str:
         """创建新会话，返回会话ID"""
         user_id = user_id or self.DEFAULT_USER
         session_id = str(uuid.uuid4())[:8]
@@ -198,7 +209,8 @@ class MemoryManager:
             "title": title or "New Chat",
             "created_at": now,
             "updated_at": now,
-            "message_count": 0
+            "message_count": 0,
+            "workspace_id": workspace_id,
         }
         self._save_index(index, user_id)
 
@@ -208,7 +220,8 @@ class MemoryManager:
         session_data = {
             "id": session_id,
             "created_at": now,
-            "messages": []
+            "workspace_id": workspace_id,
+            "messages": [],
         }
         with open(session_path, "w", encoding="utf-8") as f:
             json.dump(session_data, f, ensure_ascii=False, indent=2)
@@ -246,12 +259,15 @@ class MemoryManager:
             # 读取现有会话数据
             sessions_dir = self._get_user_sessions_dir(user_id)
             session_path = sessions_dir / f"{session_id}.json"
+            workspace_id = None
             if session_path.exists():
                 with open(session_path, "r", encoding="utf-8") as f:
                     existing = json.load(f)
                 created_at = existing.get("created_at", time.strftime("%Y-%m-%d %H:%M:%S"))
+                workspace_id = existing.get("workspace_id")
             else:
                 created_at = time.strftime("%Y-%m-%d %H:%M:%S")
+                workspace_id = self._load_index(user_id).get(session_id, {}).get("workspace_id")
 
             now = time.strftime("%Y-%m-%d %H:%M:%S")
             title = self._generate_title(saveable_messages)
@@ -262,7 +278,8 @@ class MemoryManager:
                 "created_at": created_at,
                 "updated_at": now,
                 "message_count": len(saveable_messages),
-                "messages": saveable_messages
+                "workspace_id": workspace_id,
+                "messages": saveable_messages,
             }
 
             with open(session_path, "w", encoding="utf-8") as f:
@@ -274,7 +291,8 @@ class MemoryManager:
                 "title": title,
                 "created_at": created_at,
                 "updated_at": now,
-                "message_count": len(saveable_messages)
+                "message_count": len(saveable_messages),
+                "workspace_id": workspace_id,
             }
             self._save_index(index, user_id)
 
@@ -333,6 +351,34 @@ class MemoryManager:
             return True
         except Exception as e:
             logger.error(f"Failed to rename session {session_id}: {e}")
+            return False
+
+    def move_session(self, session_id: str, workspace_id: str | None, user_id: str = None) -> bool:
+        """更新会话所属工作区。"""
+        user_id = user_id or self.DEFAULT_USER
+        try:
+            index = self._load_index(user_id)
+            if session_id not in index:
+                logger.warning(f"Session not found for move: {session_id} for user: {user_id}")
+                return False
+
+            index[session_id]["workspace_id"] = workspace_id
+            index[session_id]["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            self._save_index(index, user_id)
+
+            sessions_dir = self._get_user_sessions_dir(user_id)
+            session_path = sessions_dir / f"{session_id}.json"
+            if session_path.exists():
+                with open(session_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["workspace_id"] = workspace_id
+                with open(session_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+
+            logger.info(f"Session {session_id} moved to workspace: {workspace_id} for user: {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to move session {session_id}: {e}")
             return False
 
     def load_last_session(self, user_id: str = None) -> Optional[List[dict]]:

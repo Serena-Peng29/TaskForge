@@ -17,14 +17,22 @@ def _get_user_id(user: Optional[Dict[str, Any]]) -> str:
     return user["user_id"] if user else "default"
 
 
+def _session_info(s) -> SessionInfo:
+    return SessionInfo(
+        id=s.id,
+        title=s.title,
+        created_at=s.created_at,
+        updated_at=s.updated_at,
+        message_count=s.message_count,
+        workspace_id=s.workspace_id,
+    )
+
+
 @router.get("", response_model=List[SessionInfo])
 async def list_sessions(current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
     user_id = _get_user_id(current_user)
     sessions = MEMORY.list_sessions(user_id)
-    return [
-        SessionInfo(id=s.id, title=s.title, created_at=s.created_at, updated_at=s.updated_at, message_count=s.message_count)
-        for s in sessions
-    ]
+    return [_session_info(s) for s in sessions]
 
 
 @router.get("/{session_id}")
@@ -45,14 +53,15 @@ async def create_new_session(request: SessionCreate = None, current_user: Option
         MEMORY.save_session_by_id(current_state.current_session_id, current_state.history, user_id)
 
     title = request.title if request else None
-    session_id = MEMORY.create_session(title, user_id)
+    workspace_id = request.workspace_id if request else None
+    session_id = MEMORY.create_session(title, user_id, workspace_id=workspace_id)
     current_state.current_session_id = session_id
     set_current_state(current_state)
     current_state.history = [{"role": "system", "content": get_system_prompt()}]
 
     for s in MEMORY.list_sessions(user_id):
         if s.id == session_id:
-            return SessionInfo(id=s.id, title=s.title, created_at=s.created_at, updated_at=s.updated_at, message_count=s.message_count)
+            return _session_info(s)
     raise HTTPException(status_code=500, detail="Failed to create session")
 
 
@@ -93,4 +102,7 @@ async def update_session(session_id: str, request: SessionUpdate, current_user: 
     if request.title:
         if not MEMORY.rename_session(session_id, request.title, user_id):
             raise HTTPException(status_code=404, detail="Session not found or rename failed")
+    if request.workspace_id:
+        if not MEMORY.move_session(session_id, request.workspace_id, user_id):
+            raise HTTPException(status_code=404, detail="Session not found or move failed")
     return {"status": "updated", "session_id": session_id}

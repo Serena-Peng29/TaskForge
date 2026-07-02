@@ -132,44 +132,44 @@ export function ConfigModal({
 
   const getIcon = () => {
     switch (type) {
-      case 'model': return <Cpu className="w-5 h-5 text-blue-400" />;
-      case 'skills': return <BookOpen className="w-5 h-5 text-green-400" />;
-      case 'tools': return <Wrench className="w-5 h-5 text-orange-400" />;
+      case 'model': return <Cpu className="w-5 h-5 text-pink-500" />;
+      case 'skills': return <BookOpen className="w-5 h-5 text-pink-500" />;
+      case 'tools': return <Wrench className="w-5 h-5 text-pink-500" />;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[85vh] flex flex-col border border-gray-700">
+      <div className="relative bg-white/95 rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[85vh] flex flex-col border border-pink-100">
         {/* 标题栏 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-pink-100">
           <div className="flex items-center gap-2">
             {getIcon()}
-            <h2 className="text-lg font-semibold text-white">{getTitle()}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{getTitle()}</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-pink-50 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
         {/* 内容区域 */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5">
           {type === 'model' && (
             <div className="space-y-4">
               {/* 提供商选择 */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   模型提供商
                 </label>
                 <select
                   value={selectedProvider}
                   onChange={(e) => handleProviderChange(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white appearance-none cursor-pointer focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 appearance-none cursor-pointer focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70"
                 >
                   {MODEL_PROVIDERS.map((provider) => (
                     <option key={provider.id} value={provider.id}>
@@ -181,14 +181,14 @@ export function ConfigModal({
 
               {/* 模型选择 */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   模型
                 </label>
                 {selectedProvider !== 'custom' ? (
                   <select
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white appearance-none cursor-pointer focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 appearance-none cursor-pointer focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70"
                   >
                     {MODEL_PROVIDERS.find(p => p.id === selectedProvider)?.models.map((model) => (
                       <option key={model.id} value={model.id}>
@@ -202,14 +202,14 @@ export function ConfigModal({
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
                     placeholder="输入模型 ID，如 gpt-4o"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70"
                   />
                 )}
               </div>
 
               {/* API Key */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                   <Key className="w-4 h-4" />
                   API Key
                 </label>
@@ -218,13 +218,13 @@ export function ConfigModal({
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="sk-..."
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 font-mono text-sm"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70 font-mono text-sm"
                 />
               </div>
 
               {/* Base URL */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                   <Globe className="w-4 h-4" />
                   API 地址
                 </label>
@@ -233,13 +233,13 @@ export function ConfigModal({
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   placeholder="https://api.openai.com/v1"
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 font-mono text-sm"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70 font-mono text-sm"
                 />
               </div>
 
               {/* Temperature */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                   <Thermometer className="w-4 h-4" />
                   温度: {temperature.toFixed(1)}
                 </label>
@@ -250,9 +250,9 @@ export function ConfigModal({
                   step="0.1"
                   value={temperature}
                   onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className="w-full h-2 bg-pink-100 rounded-lg appearance-none cursor-pointer accent-pink-500"
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
                   <span>精确 (0)</span>
                   <span>创意 (2)</span>
                 </div>
@@ -260,7 +260,7 @@ export function ConfigModal({
 
               {/* Workspace */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                   <Folder className="w-4 h-4" />
                   项目目录
                 </label>
@@ -269,7 +269,7 @@ export function ConfigModal({
                   value={workspaceDir}
                   onChange={(e) => setWorkspaceDir(e.target.value)}
                   placeholder="/Users/you/path/to/project"
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 font-mono text-sm"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-900 focus:outline-none focus:border-pink-300 focus:ring-4 focus:ring-pink-100/70 font-mono text-sm"
                 />
               </div>
             </div>
@@ -278,27 +278,27 @@ export function ConfigModal({
           {type === 'skills' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-slate-500">
                   已选择 {enabledItems.size}/{skills.length} 个技能
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSelectAll(true)}
-                    className="text-xs text-blue-400 hover:text-blue-300"
+                    className="text-xs text-pink-500 hover:text-pink-600"
                   >
                     全选
                   </button>
-                  <span className="text-gray-600">|</span>
+                  <span className="text-slate-300">|</span>
                   <button
                     onClick={() => handleSelectAll(false)}
-                    className="text-xs text-gray-400 hover:text-gray-300"
+                    className="text-xs text-slate-500 hover:text-slate-700"
                   >
                     清空
                   </button>
                 </div>
               </div>
               {skills.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4 text-center">暂无可用技能</p>
+                <p className="text-slate-400 text-sm py-4 text-center">暂无可用技能</p>
               ) : (
                 <div className="space-y-2">
                   {skills.map((skill) => (
@@ -306,21 +306,21 @@ export function ConfigModal({
                       key={skill.name}
                       className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                         enabledItems.has(skill.name)
-                          ? 'bg-green-900/30 border border-green-700'
-                          : 'bg-gray-800 border border-gray-700 hover:border-gray-600'
+                          ? 'bg-pink-50 border border-pink-200 shadow-sm'
+                          : 'bg-white border border-slate-200 hover:border-pink-200 hover:bg-pink-50/40'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={enabledItems.has(skill.name)}
                         onChange={() => handleToggle(skill.name)}
-                        className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-500 focus:ring-0 focus:ring-offset-0"
+                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-pink-500 focus:ring-pink-200"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-200">
+                        <p className="text-sm font-medium text-slate-900">
                           {skill.name}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           {skill.description || '暂无描述'}
                         </p>
                       </div>
@@ -334,27 +334,27 @@ export function ConfigModal({
           {type === 'tools' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-slate-500">
                   已选择 {enabledItems.size}/{tools.length} 个工具
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSelectAll(true)}
-                    className="text-xs text-blue-400 hover:text-blue-300"
+                    className="text-xs text-pink-500 hover:text-pink-600"
                   >
                     全选
                   </button>
-                  <span className="text-gray-600">|</span>
+                  <span className="text-slate-300">|</span>
                   <button
                     onClick={() => handleSelectAll(false)}
-                    className="text-xs text-gray-400 hover:text-gray-300"
+                    className="text-xs text-slate-500 hover:text-slate-700"
                   >
                     清空
                   </button>
                 </div>
               </div>
               {tools.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4 text-center">暂无可用工具</p>
+                <p className="text-slate-400 text-sm py-4 text-center">暂无可用工具</p>
               ) : (
                 <div className="space-y-2">
                   {tools.map((tool) => (
@@ -362,21 +362,21 @@ export function ConfigModal({
                       key={tool.name}
                       className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                         enabledItems.has(tool.name)
-                          ? 'bg-orange-900/30 border border-orange-700'
-                          : 'bg-gray-800 border border-gray-700 hover:border-gray-600'
+                          ? 'bg-pink-50 border border-pink-200 shadow-sm'
+                          : 'bg-white border border-slate-200 hover:border-pink-200 hover:bg-pink-50/40'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={enabledItems.has(tool.name)}
                         onChange={() => handleToggle(tool.name)}
-                        className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-0 focus:ring-offset-0"
+                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-pink-500 focus:ring-pink-200"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-200 font-mono">
+                        <p className="text-sm font-medium text-slate-900 font-mono">
                           {tool.name}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           {tool.description || '暂无描述'}
                         </p>
                       </div>
@@ -389,17 +389,17 @@ export function ConfigModal({
         </div>
 
         {/* 底部按钮 */}
-        <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-700">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-pink-100 bg-pink-50/30">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 transition-colors"
           >
             取消
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-pink-500 hover:bg-pink-600 disabled:bg-pink-200 rounded-lg transition-colors"
           >
             {isSaving ? (
               <span>保存中...</span>

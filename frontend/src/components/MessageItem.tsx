@@ -11,9 +11,9 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
       <div className="relative max-w-[90vw] max-h-[90vh]">
         <button
           onClick={onClose}
-          className="absolute -top-10 right-0 p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          className="absolute -top-10 right-0 p-2 bg-white rounded-lg hover:bg-pink-50 transition-colors"
         >
-          <X className="w-5 h-5 text-white" />
+          <X className="w-5 h-5 text-slate-700" />
         </button>
         <img
           src={src}
@@ -82,16 +82,16 @@ function ToolCallModal({ tool, onClose }: ToolCallModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60" />
       <div
-        className="relative bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col border border-gray-700"
+        className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 标题栏 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-orange-400" />
-            <span className="font-mono text-orange-400 font-medium">{tool.name}</span>
+            <Wrench className="w-5 h-5 text-pink-500" />
+            <span className="font-mono text-pink-600 font-medium">{tool.name}</span>
             {tool.status === 'executing' && (
-              <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+              <Loader2 className="w-4 h-4 text-pink-500 animate-spin" />
             )}
             {tool.status === 'done' && (
               <CheckCircle className="w-4 h-4 text-green-500" />
@@ -99,9 +99,9 @@ function ToolCallModal({ tool, onClose }: ToolCallModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1 hover:bg-pink-50 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
@@ -110,8 +110,8 @@ function ToolCallModal({ tool, onClose }: ToolCallModalProps) {
           {/* 参数 */}
           {tool.args && (
             <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-2">参数</h3>
-              <pre className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-300 overflow-x-auto">
+              <h3 className="text-sm font-medium text-slate-500 mb-2">参数</h3>
+              <pre className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 overflow-x-auto">
                 {formatArgs(tool.args)}
               </pre>
             </div>
@@ -120,8 +120,8 @@ function ToolCallModal({ tool, onClose }: ToolCallModalProps) {
           {/* 结果 */}
           {tool.result && (
             <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-2">返回结果</h3>
-              <pre className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-300 overflow-x-auto max-h-96 overflow-y-auto">
+              <h3 className="text-sm font-medium text-slate-500 mb-2">返回结果</h3>
+              <pre className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 overflow-x-auto max-h-96 overflow-y-auto">
                 {tool.result}
               </pre>
             </div>
@@ -174,17 +174,17 @@ function CompactToolRow({
     <button
       type="button"
       onClick={onSelect}
-      className="flex max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-800/70 hover:text-gray-300 transition-colors"
+      className="flex max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-pink-50 hover:text-slate-700 transition-colors"
       title={summary || tool.name}
     >
       {isRunning ? (
-        <Loader2 className="w-3.5 h-3.5 text-gray-500 animate-spin flex-shrink-0" />
+        <Loader2 className="w-3.5 h-3.5 text-pink-500 animate-spin flex-shrink-0" />
       ) : (
-        <Terminal className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+        <Terminal className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
       )}
       <span className="whitespace-nowrap flex-shrink-0">{getToolAction(tool.name, tool.status)}</span>
-      <span className="font-mono text-gray-400 truncate flex-shrink-0 max-w-[11rem]">{tool.name}</span>
-      {summary && <span className="truncate text-gray-600 min-w-0">{summary}</span>}
+      <span className="font-mono text-slate-500 truncate flex-shrink-0 max-w-[11rem]">{tool.name}</span>
+      {summary && <span className="truncate text-slate-400 min-w-0">{summary}</span>}
     </button>
   );
 }
@@ -224,7 +224,7 @@ function ToolSummary({
       <button
         type="button"
         onClick={() => setCollapsed(false)}
-        className="mb-2 flex max-w-full items-center gap-2 rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-800/70 hover:text-gray-300 transition-colors"
+        className="mb-2 flex max-w-full items-center gap-2 rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-pink-50 hover:text-slate-700 transition-colors"
       >
         {hasRunning ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
@@ -243,7 +243,7 @@ function ToolSummary({
       <button
         type="button"
         onClick={() => setCollapsed(true)}
-        className="mb-1 flex items-center gap-2 rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-800/70 hover:text-gray-300 transition-colors"
+        className="mb-1 flex items-center gap-2 rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-pink-50 hover:text-slate-700 transition-colors"
       >
         <ChevronRight className="w-3.5 h-3.5 rotate-90" />
         <span>{hasRunning ? '正在处理' : '已处理'}</span>
@@ -272,7 +272,7 @@ export function MessageItem({ message }: MessageItemProps) {
     };
     return (
       <>
-        <div className="flex gap-3 px-4 py-1 justify-start">
+        <div className="flex gap-3 px-8 py-1 justify-start">
           <div className="w-8 flex-shrink-0" />
           <div className="w-full max-w-[80%] min-w-0 overflow-hidden">
             <CompactToolRow tool={tool} onSelect={() => setSelectedTool(tool)} />
@@ -287,11 +287,11 @@ export function MessageItem({ message }: MessageItemProps) {
   if (message.toolCalls && message.toolCalls.length > 0 && !message.content) {
     return (
       <>
-        <div className="flex gap-3 px-4 py-1 justify-start">
+        <div className="flex gap-3 px-8 py-1 justify-start">
           <div className="w-8 flex-shrink-0" />
           <div className="w-full max-w-[80%] min-w-0 overflow-hidden">
             {message.activity && (
-              <div className="mb-1 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mb-1 flex items-center gap-2 text-sm text-slate-500">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>{message.activity}</span>
               </div>
@@ -306,10 +306,10 @@ export function MessageItem({ message }: MessageItemProps) {
 
   return (
     <>
-      <div className={`flex min-w-0 gap-3 p-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex min-w-0 gap-3 px-8 py-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
         {/* AI消息：头像在左 */}
         {!isUser && (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-600">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-pink-500 shadow-sm">
             <Bot className="w-5 h-5 text-white" />
           </div>
         )}
@@ -317,7 +317,7 @@ export function MessageItem({ message }: MessageItemProps) {
         {/* Content */}
         <div className="max-w-[80%] min-w-0 overflow-hidden">
           {message.activity && !isUser && (
-            <div className="mb-2 flex items-center gap-2 text-sm text-gray-500">
+            <div className="mb-2 flex items-center gap-2 text-sm text-slate-500">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>{message.activity}</span>
             </div>
@@ -329,10 +329,10 @@ export function MessageItem({ message }: MessageItemProps) {
 
           {/* Text content */}
           {message.content && (
-            <div className={`rounded-xl px-4 py-3 border ${
+            <div className={`rounded-2xl px-4 py-3 border shadow-sm ${
               isUser
-                ? 'bg-blue-600/20 border-blue-500/50 text-gray-100'
-                : 'bg-gray-800 border-gray-700 text-gray-100'
+                ? 'bg-pink-500 border-pink-500 text-white'
+                : 'bg-white border-slate-200 text-slate-800'
             }`}>
               <div className="markdown-content min-w-0 overflow-hidden break-words">
                 <ReactMarkdown
@@ -350,8 +350,8 @@ export function MessageItem({ message }: MessageItemProps) {
 
         {/* 用户消息：头像在右 */}
         {isUser && (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-600">
-            <User className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-pink-100">
+            <User className="w-5 h-5 text-pink-600" />
           </div>
         )}
       </div>
