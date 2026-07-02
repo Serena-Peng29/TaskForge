@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from dataclasses import dataclass
 import json
 
-from spark.config import get_config, logger
+from taskforge.config import get_config, logger
 
 
 @dataclass

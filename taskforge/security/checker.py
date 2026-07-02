@@ -1,4 +1,4 @@
-from spark.config import logger
+from taskforge.config import logger
 import re
 
 class SecurityChecker:

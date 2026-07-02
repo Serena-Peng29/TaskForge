@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends
 
-from spark.services.memory import get_memory
+from taskforge.services.memory import get_memory
 from api.schemas import SessionInfo, SessionCreate, SessionUpdate
 from api.deps import get_current_user_optional, get_state_for_user, set_current_state, get_system_prompt
 

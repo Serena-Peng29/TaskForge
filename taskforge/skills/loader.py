@@ -1,7 +1,7 @@
 """
 技能加载器
 """
-from spark.config import logger
+from taskforge.config import logger
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -117,7 +117,7 @@ def get_skills():
     """获取技能加载器实例"""
     global _SKILLS
     if _SKILLS is None:
-        from spark.config import get_config
+        from taskforge.config import get_config
         config = get_config()
         # 支持多个技能目录：skills/ 和 .agents/skills/
         skills_dirs = [config.workdir / "skills", config.workdir / ".agents" / "skills"]

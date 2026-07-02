@@ -1,4 +1,4 @@
-# Spark Agent
+# TaskForge
 
 基于 OpenAI SDK 的 AI 编码助手框架。
 
@@ -53,7 +53,7 @@ python main.py --web
 ```
 .
 ├── main.py                # CLI / Web 启动入口
-├── spark/                 # 后端运行时包
+├── taskforge/             # 后端运行时包
 │   ├── cli.py             # CLI 主逻辑
 │   ├── config.py          # 配置管理
 │   ├── core/              # Agent、压缩、错误处理
@@ -76,7 +76,7 @@ python main.py --web
 └── tests/                 # 后端测试
 ```
 
-根目录保留启动入口、项目配置和文档。后端运行时模块集中在 `spark/` 包；Web API 代码以 `api/` 包为准。
+根目录保留启动入口、项目配置和文档。后端运行时模块集中在 `taskforge/` 包；Web API 代码以 `api/` 包为准。
 
 ## 内置命令
 

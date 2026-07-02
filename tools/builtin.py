@@ -8,8 +8,8 @@ import json
 import time
 
 from .base import BaseTool, ToolResult, TOOLS
-from spark.security.checker import SECURITY
-from spark.skills.loader import SkillLoader
+from taskforge.security.checker import SECURITY
+from taskforge.skills.loader import SkillLoader
 from .websearch import WebSearchTool
 
 

@@ -1,4 +1,4 @@
-"""CLI entry point for Spark Agent."""
+"""CLI entry point for TaskForge."""
 from __future__ import annotations
 
 import argparse
@@ -6,11 +6,11 @@ import sys
 from pathlib import Path
 
 from api.deps import DEFAULT_SYSTEM_PROMPT
-from spark.config import get_config, init_config, logger
-from spark.core.agents import AGENT_TYPES, TOKEN_USAGE, agent_loop, get_agent_descriptions
-from spark.services.memory import get_memory
-from spark.services.todo_manager import TODO
-from spark.skills.loader import SKILLS
+from taskforge.config import get_config, init_config, logger
+from taskforge.core.agents import AGENT_TYPES, TOKEN_USAGE, agent_loop, get_agent_descriptions
+from taskforge.services.memory import get_memory
+from taskforge.services.todo_manager import TODO
+from taskforge.skills.loader import SKILLS
 
 CONFIG = get_config()
 MEMORY = get_memory()
@@ -27,7 +27,7 @@ def get_system_prompt() -> str:
 def print_banner() -> None:
     """打印启动信息"""
     print("=" * 60)
-    print("  PyCode Agent v3.0 (Async / Tools Framework / Skills)")
+    print("  TaskForge v3.0 (Async / Tools Framework / Skills)")
     print("=" * 60)
     print(f"  Workspace: {CONFIG.workdir}")
     print(f"  Output:    {CONFIG.output_dir}")
@@ -63,7 +63,7 @@ def run_web_server(host: str | None = None, port: int | None = None) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="PyCode Agent - AI Coding Assistant")
+    parser = argparse.ArgumentParser(description="TaskForge - AI Coding Assistant")
     parser.add_argument("--web", action="store_true", help="Start web server mode")
     parser.add_argument("--port", type=int, default=None, help="Web server port (default: 8000)")
     parser.add_argument("--host", type=str, default=None, help="Web server host (default: 0.0.0.0)")

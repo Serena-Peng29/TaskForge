@@ -7,9 +7,9 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.responses import FileResponse
 
-from spark.config import get_config
-from spark.skills.loader import SKILLS
-from spark.core.agents import AGENT_TYPES, TOKEN_USAGE
+from taskforge.config import get_config
+from taskforge.skills.loader import SKILLS
+from taskforge.core.agents import AGENT_TYPES, TOKEN_USAGE
 from tools.base import TOOLS
 from api.schemas import (
     SkillInfo, ToolInfo, ModelInfo, ConfigUpdate, PromptUpdate,

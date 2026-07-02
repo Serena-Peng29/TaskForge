@@ -8,10 +8,10 @@ from typing import AsyncGenerator, List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 from sse_starlette.sse import EventSourceResponse
 
-from spark.config import logger
-from spark.services.memory import get_memory
+from taskforge.config import logger
+from taskforge.services.memory import get_memory
 from tools.base import TOOLS
-from spark.core.agents import TOKEN_USAGE
+from taskforge.core.agents import TOKEN_USAGE
 from api.schemas import ChatRequest
 from api.deps import (
     get_current_user_optional, get_state_for_user, get_current_state,

@@ -8,12 +8,12 @@ import time
 import sys
 import json
 
-from spark.config import get_config, logger
-from spark.skills.loader import SKILLS
-from spark.services.todo_manager import TODO
+from taskforge.config import get_config, logger
+from taskforge.skills.loader import SKILLS
+from taskforge.services.todo_manager import TODO
 from tools.base import TOOLS, ToolResult
 from tools.builtin import register_builtin_tools
-from spark.core.errors import (
+from taskforge.core.errors import (
     AgentError, APIError, ToolExecutionError,
     handle_errors, ErrorContext
 )

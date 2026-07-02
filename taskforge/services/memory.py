@@ -492,7 +492,7 @@ def get_memory():
     """获取内存管理器实例"""
     global _MEMORY
     if _MEMORY is None:
-        from spark.config import get_config
+        from taskforge.config import get_config
         config = get_config()
         _MEMORY = MemoryManager(
             memory_dir=config.workdir / "memory"

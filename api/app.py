@@ -6,13 +6,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from spark.config import get_config, logger
-from spark.skills.loader import SKILLS
-from spark.core.agents import AgentClient
-from spark.services.memory import get_memory
-from spark.integrations.mcp_manager import get_mcp_manager
-from spark.services.auth import init_auth, AUTH_AVAILABLE
-from spark.services.user_state import StateManager, UserState
+from taskforge.config import get_config, logger
+from taskforge.skills.loader import SKILLS
+from taskforge.core.agents import AgentClient
+from taskforge.services.memory import get_memory
+from taskforge.integrations.mcp_manager import get_mcp_manager
+from taskforge.services.auth import init_auth, AUTH_AVAILABLE
+from taskforge.services.user_state import StateManager, UserState
 
 CONFIG = get_config()
 MEMORY = get_memory()
@@ -82,7 +82,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Spark Agent API",
+        title="TaskForge API",
         description="AI Coding Assistant API with SSE streaming",
         version="1.0.0",
         lifespan=lifespan
@@ -116,7 +116,7 @@ app = create_app()
 
 def run_server(host: str = "0.0.0.0", port: int = 8000):
     import uvicorn
-    print(f"\nStarting Spark Agent Web Server...")
+    print(f"\nStarting TaskForge Web Server...")
     print(f"  API: http://{host}:{port}")
     print(f"  Docs: http://{host}:{port}/docs")
     print(f"  Model: {CONFIG.model}")

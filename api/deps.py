@@ -7,10 +7,10 @@ from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from spark.services.auth import get_jwt_manager, AUTH_AVAILABLE
-from spark.config import get_config
-from spark.skills.loader import SKILLS
-from spark.services.user_state import StateManager, UserState, get_state_manager
+from taskforge.services.auth import get_jwt_manager, AUTH_AVAILABLE
+from taskforge.config import get_config
+from taskforge.skills.loader import SKILLS
+from taskforge.services.user_state import StateManager, UserState, get_state_manager
 
 CONFIG = get_config()
 
@@ -92,7 +92,7 @@ Rules:
 
 
 def get_system_prompt() -> str:
-    from spark.core.agents import get_agent_descriptions
+    from taskforge.core.agents import get_agent_descriptions
     current_state = get_current_state()
     template = current_state.custom_system_prompt or DEFAULT_SYSTEM_PROMPT
     return template.format(

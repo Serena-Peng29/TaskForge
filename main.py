@@ -1,6 +1,6 @@
-"""Compatibility entry point for running Spark from the repository root."""
+"""Compatibility entry point for running TaskForge from the repository root."""
 
-from spark.cli import main
+from taskforge.cli import main
 
 
 if __name__ == "__main__":

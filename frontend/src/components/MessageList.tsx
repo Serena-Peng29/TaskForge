@@ -21,7 +21,7 @@ export function MessageList({ messages, isStreaming, currentContent }: MessageLi
       {messages.length === 0 && !isStreaming && (
         <div className="flex items-center justify-center h-full text-gray-500">
           <div className="text-center">
-            <p className="text-xl mb-2">Welcome to Spark</p>
+            <p className="text-xl mb-2">Welcome to TaskForge</p>
             <p className="text-sm">Type a message to start coding with AI assistance</p>
           </div>
         </div>

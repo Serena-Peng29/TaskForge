@@ -1,5 +1,5 @@
 [project]
-name = "pycode-agent"
+name = "taskforge"
 version = "3.0.0"
 description = "AI-powered coding agent with tools framework and skills"
 readme = "README.md"
@@ -37,10 +37,10 @@ json-logging = [
 ]
 
 [project.scripts]
-pycode-agent = "spark.cli:main"
+taskforge = "taskforge.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["spark*", "api*", "tools*"]
+include = ["taskforge*", "api*", "tools*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

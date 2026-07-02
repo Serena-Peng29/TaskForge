@@ -1,27 +1,27 @@
 # Project Structure
 
-Spark uses a package layout for backend runtime code. The repository root keeps
+TaskForge uses a package layout for backend runtime code. The repository root keeps
 entry points, project configuration, documentation, and top-level app folders.
 
 ## Current Layout
 
 ```text
-main.py                 CLI and Web server entry point
-spark/                  Backend runtime package
-api/                    FastAPI application package
-tools/                  Tool abstractions and built-in tools
-frontend/               React/Vite frontend
-scripts/                Local utility scripts
-skills/                 Bundled skills
-tests/                  Backend tests
+main.py       CLI and Web server entry point
+taskforge/    Backend runtime package
+api/          FastAPI application package
+tools/        Tool abstractions and built-in tools
+frontend/     React/Vite frontend
+scripts/      Local utility scripts
+skills/       Bundled skills
+tests/        Backend tests
 ```
 
 ## Runtime Package
 
-The `spark/` package is organized by responsibility:
+The `taskforge/` package is organized by responsibility:
 
 ```text
-spark/
+taskforge/
   cli.py
   config.py
   core/
@@ -42,4 +42,4 @@ spark/
 ```
 
 Keep `main.py` as a compatibility entry point for local runs. New imports should
-prefer `spark.*` modules directly.
+prefer `taskforge.*` modules directly.
