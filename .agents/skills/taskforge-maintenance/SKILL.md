@@ -1,13 +1,13 @@
 ---
-name: spark-maintenance
-description: Maintain, audit, stabilize, and modernize the local Spark project at /Users/serena.peng/iDreamsky/Spark. Use when Codex is asked to optimize Spark, fix Spark tests or builds, review Spark security, refactor the Python/FastAPI agent backend, improve the React/Vite frontend, work on MCP/tool execution/auth/memory code, or create a safe maintenance plan for this legacy project.
+name: taskforge-maintenance
+description: Maintain, audit, stabilize, and modernize the local TaskForge project at /Users/serena.peng/iDreamsky/Spark. Use when Codex is asked to optimize TaskForge, fix TaskForge tests or builds, review TaskForge security, refactor the Python/FastAPI agent backend, improve the React/Vite frontend, work on MCP/tool execution/auth/session code, or create a safe maintenance plan for this project.
 ---
 
-# Spark Maintenance
+# TaskForge Maintenance
 
 ## Overview
 
-Use this skill for the Spark repository, a Python AI coding-agent app with FastAPI APIs, MCP integration, tool execution, memory/auth modules, bundled skills, and a React/Vite frontend. Bias toward safety, reproducibility, and regression protection before broad refactors.
+Use this skill for the TaskForge repository, a Python AI coding-agent app with FastAPI APIs, MCP integration, tool execution, auth/session modules, bundled skills, and a React/Vite frontend. Bias toward safety, reproducibility, and regression protection before broad refactors.
 
 Default project path:
 
@@ -32,15 +32,16 @@ README.md
 pyproject.toml
 requirements.txt
 main.py
-agents.py
-api.py
+taskforge/cli.py
+taskforge/config.py
+taskforge/core/agents.py
 api/app.py
 api/routers/*.py
 tools/builtin.py
-security_checker.py
-mcp_manager.py
-auth.py
-memory.py
+taskforge/security/checker.py
+taskforge/integrations/mcp_manager.py
+taskforge/services/auth.py
+taskforge/services/memory.py
 frontend/package.json
 frontend/src/api/client.ts
 frontend/src/components/*.tsx
@@ -65,7 +66,7 @@ Use this order unless the user asks for a narrower task:
 
 ## Environment Baseline
 
-Check Python first. This machine may have `python` pointing at another project venv, so prefer an explicit Spark venv:
+Check Python first. This machine may have `python` pointing at another project venv, so prefer an explicit TaskForge venv:
 
 ```bash
 cd /Users/serena.peng/iDreamsky/Spark
@@ -99,10 +100,10 @@ If `frontend/node_modules/.bin/tsc` is not executable, prefer reinstalling depen
 Prioritize these areas:
 
 - `tools/builtin.py`: command execution, `shell=True`, timeout handling, output limits, working directory constraints.
-- `security_checker.py`: command filtering, path validation, bypasses, case sensitivity, symlink handling.
-- `mcp_manager.py`: MCP server command/env validation, config import, lifecycle cleanup, remote command injection risk.
-- `auth.py` and `api/routers/auth.py`: default JWT secret, password handling, token expiry, auth-disabled fallback behavior.
-- `memory.py`: external service config, API key handling, persistence boundaries.
+- `taskforge/security/checker.py`: command filtering, path validation, bypasses, case sensitivity, symlink handling.
+- `taskforge/integrations/mcp_manager.py`: MCP server command/env validation, config import, lifecycle cleanup, remote command injection risk.
+- `taskforge/services/auth.py` and `api/routers/auth.py`: default JWT secret, password handling, token expiry, auth-disabled fallback behavior.
+- `taskforge/services/memory.py`: session persistence boundaries.
 - `mcp_config.json`, `.env*`, config files: possible secret leakage.
 
 Do not print full secret values. If a credential appears committed or stored in a project config, tell the user to rotate it and replace it with an environment variable or ignored local config.
@@ -124,11 +125,11 @@ Mock external APIs and MCP processes. Avoid tests that require real OpenAI, Qdra
 
 Keep refactors small and behavior-preserving:
 
-- Prefer moving endpoints from the large `api.py` into `api/routers/*` only when tests or smoke checks cover the path.
+- Prefer keeping endpoint logic in `api/routers/*`; when splitting or moving routes, make sure tests or smoke checks cover the path.
 - Preserve compatibility for frontend API paths under `/api/*`.
 - Keep model/schema changes in `api/schemas.py` and update frontend `frontend/src/types.ts` together.
 - Avoid renaming public files or classes unless the surrounding code already moved in that direction.
-- When touching `agents.py`, `tools/`, or `mcp_manager.py`, assume downstream behavior is fragile and add focused tests first.
+- When touching `taskforge/core/agents.py`, `tools/`, or `taskforge/integrations/mcp_manager.py`, assume downstream behavior is fragile and add focused tests first.
 
 ## Frontend Guidance
 
