@@ -8,7 +8,7 @@ from typing import AsyncGenerator, List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 from sse_starlette.sse import EventSourceResponse
 
-from spark.config import get_config, logger
+from spark.config import logger
 from spark.services.memory import get_memory
 from tools.base import TOOLS
 from spark.core.agents import TOKEN_USAGE
@@ -18,7 +18,6 @@ from api.deps import (
     set_current_state, get_system_prompt
 )
 
-CONFIG = get_config()
 MEMORY = get_memory()
 router = APIRouter(tags=["chat"])
 
@@ -67,44 +66,6 @@ def validate_history_messages(messages: List[dict]) -> List[dict]:
     return validated
 
 
-def get_memory_context(message: str, user_id: str = "default") -> str:
-    if not MEMORY.is_long_term_memory_available():
-        return ""
-    try:
-        memories = MEMORY.search_memories(message, user_id, limit=5)
-        if not memories:
-            return ""
-        memory_text = "\n".join([f"- {m.get('memory', str(m))}" for m in memories])
-        return f"\n\n[User Memories (remember these across all sessions)]:\n{memory_text}\n"
-    except Exception as e:
-        logger.error(f"Failed to get memory context: {e}")
-        return ""
-
-
-def auto_save_memories():
-    if not CONFIG.memory_config.enable_auto_extract or not MEMORY.is_long_term_memory_available():
-        return
-    try:
-        current_state = get_current_state()
-        user_message = ""
-        assistant_message = ""
-        for msg in reversed(current_state.history):
-            if msg.get("role") == "user" and not user_message:
-                user_message = msg.get("content", "")
-            elif msg.get("role") == "assistant" and not assistant_message:
-                assistant_message = msg.get("content", "") or ""
-            if user_message and assistant_message:
-                break
-        if not user_message:
-            return
-        user_id = getattr(current_state, 'user_id', 'default') or 'default'
-        result = MEMORY.add_memory(f"用户: {user_message}\n助手: {assistant_message}", user_id=user_id)
-        if result and result.get("results"):
-            logger.info(f"Auto-extracted memories: {len(result.get('results', []))} items")
-    except Exception as e:
-        logger.error(f"Failed to auto-save memories: {e}")
-
-
 def auto_save_session():
     current_state = get_current_state()
     if not current_state.current_session_id:
@@ -120,12 +81,6 @@ async def stream_chat_response(message: str) -> AsyncGenerator[dict, None]:
     from openai.types.chat import ChatCompletionMessageToolCall
 
     current_state = get_current_state()
-    user_id = getattr(current_state, 'user_id', 'default') or 'default'
-    memory_context = get_memory_context(message, user_id)
-
-    if memory_context:
-        current_state.history.append({"role": "system", "content": memory_context.strip()})
-
     current_state.history.append({"role": "user", "content": message})
     logger.info(f"User input: {message[:100]}...")
     yield {"event": "start", "data": json.dumps({"message": message})}
@@ -192,7 +147,6 @@ async def stream_chat_response(message: str) -> AsyncGenerator[dict, None]:
                 yield event
         else:
             current_state.history.append({"role": "assistant", "content": collected_content})
-            auto_save_memories()
             auto_save_session()
             yield {"event": "done", "data": json.dumps({"content": collected_content})}
 
@@ -275,7 +229,6 @@ async def stream_agent_loop() -> AsyncGenerator[dict, None]:
             yield event
     else:
         current_state.history.append({"role": "assistant", "content": collected_content})
-        auto_save_memories()
         auto_save_session()
         yield {"event": "done", "data": json.dumps({"content": collected_content})}
 

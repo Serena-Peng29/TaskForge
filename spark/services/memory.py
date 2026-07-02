@@ -1,7 +1,6 @@
 """
-会话记忆管理模块
+会话历史管理模块
 支持多会话管理，每个会话独立存储
-集成 mem0 + qdrant 实现长期记忆功能
 """
 from pathlib import Path
 import json
@@ -12,156 +11,6 @@ import uuid
 import re
 
 logger = logging.getLogger(__name__)
-
-# mem0 导入（可选依赖）
-try:
-    from mem0 import Memory
-    MEM0_AVAILABLE = True
-except ImportError:
-    MEM0_AVAILABLE = False
-    logger.warning("mem0ai not installed. Long-term memory features disabled. Run: pip install mem0ai")
-
-
-class Mem0Client:
-    """mem0 客户端封装，用于长期记忆管理"""
-
-    def __init__(self, qdrant_host: str = "localhost", qdrant_port: int = 6333,
-                 collection_name: str = "toymagic_memories",
-                 embedder_api_key: str = "", embedder_model: str = "text-embedding-v4",
-                 embedder_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"):
-        if not MEM0_AVAILABLE:
-            self.memory = None
-            logger.warning("Mem0Client initialized but mem0 not available")
-            return
-
-        try:
-            from spark.config import get_config
-            config = get_config()
-
-            # 配置 mem0 使用 qdrant 作为向量存储，阿里云作为 embedder
-            # 同时配置 LLM 用于记忆提取
-            config_dict = {
-                "vector_store": {
-                    "provider": "qdrant",
-                    "config": {
-                        "host": qdrant_host,
-                        "port": qdrant_port,
-                        "collection_name": collection_name,
-                        "embedding_model_dims": 1024,  # text-embedding-v4 的维度
-                    }
-                },
-                "embedder": {
-                    "provider": "openai",  # 使用 openai 兼容模式
-                    "config": {
-                        "api_key": embedder_api_key,
-                        "model": embedder_model,
-                        "embedding_dims": 1024,
-                        "openai_base_url": embedder_base_url
-                    }
-                },
-                "llm": {
-                    "provider": "openai",
-                    "config": {
-                        "api_key": config.api_key,
-                        "model": config.model,
-                        "openai_base_url": config.base_url,
-                        "temperature": 0.1,
-                        "top_p": None,  # 设为 None，尝试让 mem0 不发送此参数
-                    }
-                }
-            }
-
-            self.memory = Memory.from_config(config_dict)
-            logger.info(f"Mem0Client initialized with Qdrant at {qdrant_host}:{qdrant_port}")
-        except Exception as e:
-            self.memory = None
-            logger.error(f"Failed to initialize Mem0Client: {e}")
-
-    def is_available(self) -> bool:
-        """检查 mem0 是否可用"""
-        return self.memory is not None
-
-    def add(self, content: str, user_id: str = "default") -> Optional[Dict[str, Any]]:
-        """添加记忆"""
-        if not self.is_available():
-            logger.warning("mem0 not available, cannot add memory")
-            return None
-
-        try:
-            result = self.memory.add(content, user_id=user_id)
-            logger.info(f"Added memory for user {user_id}: {content[:50]}...")
-            return result
-        except Exception as e:
-            logger.error(f"Failed to add memory: {e}")
-            return None
-
-    def search(self, query: str, user_id: str = "default", limit: int = 10) -> List[Dict[str, Any]]:
-        """搜索记忆"""
-        if not self.is_available():
-            logger.warning("mem0 not available, cannot search memories")
-            return []
-
-        try:
-            results = self.memory.search(query, user_id=user_id, limit=limit)
-            # 确保返回的是列表
-            if isinstance(results, list):
-                return results
-            else:
-                logger.warning(f"Unexpected search response type: {type(results)}")
-                return []
-        except Exception as e:
-            logger.error(f"Failed to search memories: {e}")
-            return []
-
-    def get_all(self, user_id: str = "default") -> List[Dict[str, Any]]:
-        """获取所有记忆"""
-        if not self.is_available():
-            logger.warning("mem0 not available, cannot get all memories")
-            return []
-
-        try:
-            results = self.memory.get_all(user_id=user_id)
-            # 确保返回的是列表
-            if isinstance(results, list):
-                return results
-            elif isinstance(results, dict) and 'results' in results:
-                return results['results']
-            else:
-                logger.warning(f"Unexpected get_all response type: {type(results)}")
-                return []
-        except Exception as e:
-            logger.error(f"Failed to get all memories: {e}")
-            return []
-
-    def update(self, memory_id: str, content: str) -> bool:
-        """更新记忆内容"""
-        if not self.is_available():
-            logger.warning("mem0 not available, cannot update memory")
-            return False
-
-        try:
-            # mem0 的 update 方法
-            self.memory.update(memory_id, content)
-            logger.info(f"Updated memory: {memory_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to update memory: {e}")
-            return False
-
-    def delete(self, memory_id: str) -> bool:
-        """删除记忆"""
-        if not self.is_available():
-            logger.warning("mem0 not available, cannot delete memory")
-            return False
-
-        try:
-            self.memory.delete(memory_id)
-            logger.info(f"Deleted memory: {memory_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to delete memory: {e}")
-            return False
-
 
 class SessionInfo:
     """会话元信息"""
@@ -193,29 +42,16 @@ class SessionInfo:
 
 
 class MemoryManager:
-    """对话历史记忆管理器 - 负责加载和保存对话历史，支持多会话和长期记忆"""
+    """对话历史管理器 - 负责加载和保存本地会话历史"""
 
     # 默认用户ID（向后兼容无认证模式）
     DEFAULT_USER = "default"
 
-    def __init__(self, memory_dir: Path = None, qdrant_host: str = "localhost",
-                 qdrant_port: int = 6333, collection_name: str = "toymagic_memories",
-                 embedder_api_key: str = "", embedder_model: str = "text-embedding-v4",
-                 embedder_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"):
+    def __init__(self, memory_dir: Path = None):
         self.memory_dir = Path(memory_dir) if memory_dir else Path.cwd() / "memory"
         self.users_dir = self.memory_dir / "users"
         self.history_file = self.memory_dir / "conversation_history.json"
         self._ensure_memory_dir()
-
-        # 初始化 mem0 客户端（长期记忆）
-        self.mem0_client = Mem0Client(
-            qdrant_host=qdrant_host,
-            qdrant_port=qdrant_port,
-            collection_name=collection_name,
-            embedder_api_key=embedder_api_key,
-            embedder_model=embedder_model,
-            embedder_base_url=embedder_base_url
-        )
 
     def _ensure_memory_dir(self):
         """确保 memory 目录存在"""
@@ -499,68 +335,6 @@ class MemoryManager:
             logger.error(f"Failed to rename session {session_id}: {e}")
             return False
 
-    # ==================== 长期记忆管理 (mem0) ====================
-
-    def add_memory(self, content: str, user_id: str = "default") -> Optional[Dict[str, Any]]:
-        """
-        添加长期记忆
-        Args:
-            content: 记忆内容
-            user_id: 用户标识
-        Returns:
-            添加结果，包含 memory_id 等信息
-        """
-        return self.mem0_client.add(content, user_id)
-
-    def search_memories(self, query: str, user_id: str = "default", limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        语义搜索长期记忆
-        Args:
-            query: 搜索查询
-            user_id: 用户标识
-            limit: 返回结果数量限制
-        Returns:
-            匹配的记忆列表
-        """
-        return self.mem0_client.search(query, user_id, limit)
-
-    def get_all_memories(self, user_id: str = "default") -> List[Dict[str, Any]]:
-        """
-        获取用户的所有长期记忆
-        Args:
-            user_id: 用户标识
-        Returns:
-            所有记忆列表
-        """
-        return self.mem0_client.get_all(user_id)
-
-    def delete_memory(self, memory_id: str) -> bool:
-        """
-        删除指定的长期记忆
-        Args:
-            memory_id: 记忆ID
-        Returns:
-            是否删除成功
-        """
-        return self.mem0_client.delete(memory_id)
-
-    def update_memory(self, memory_id: str, content: str) -> bool:
-        """
-        更新指定的长期记忆
-        Args:
-            memory_id: 记忆ID
-            content: 新的记忆内容
-        Returns:
-            是否更新成功
-        """
-        return self.mem0_client.update(memory_id, content)
-
-    def is_long_term_memory_available(self) -> bool:
-        """检查长期记忆功能是否可用"""
-        return self.mem0_client.is_available()
-
-    # ==================== 原有功能保持兼容 ====================
-
     def load_last_session(self, user_id: str = None) -> Optional[List[dict]]:
         """
         启动钩子: 加载上次对话历史
@@ -721,13 +495,7 @@ def get_memory():
         from spark.config import get_config
         config = get_config()
         _MEMORY = MemoryManager(
-            memory_dir=config.workdir / "memory",
-            qdrant_host=config.memory_config.qdrant_host,
-            qdrant_port=config.memory_config.qdrant_port,
-            collection_name=config.memory_config.collection_name,
-            embedder_api_key=config.memory_config.embedder_api_key,
-            embedder_model=config.memory_config.embedder_model,
-            embedder_base_url=config.memory_config.embedder_base_url
+            memory_dir=config.workdir / "memory"
         )
     return _MEMORY
 

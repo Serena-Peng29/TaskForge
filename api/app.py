@@ -49,8 +49,8 @@ async def lifespan(app: FastAPI):
 
     if AUTH_AVAILABLE:
         auth_initialized = init_auth(
-            qdrant_host=CONFIG.memory_config.qdrant_host,
-            qdrant_port=CONFIG.memory_config.qdrant_port,
+            qdrant_host=CONFIG.qdrant_config.qdrant_host,
+            qdrant_port=CONFIG.qdrant_config.qdrant_port,
             users_collection=CONFIG.auth_config.users_collection,
             jwt_secret=CONFIG.auth_config.jwt_secret,
             jwt_algorithm=CONFIG.auth_config.jwt_algorithm,
@@ -98,14 +98,12 @@ def create_app() -> FastAPI:
 
     from api.routers.auth import router as auth_router
     from api.routers.sessions import router as sessions_router
-    from api.routers.memories import router as memories_router
     from api.routers.mcp import router as mcp_router
     from api.routers.general import router as general_router
     from api.routers.chat import router as chat_router
 
     app.include_router(auth_router)
     app.include_router(sessions_router)
-    app.include_router(memories_router)
     app.include_router(mcp_router)
     app.include_router(general_router)
     app.include_router(chat_router)

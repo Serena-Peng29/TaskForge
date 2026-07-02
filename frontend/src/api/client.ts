@@ -1,4 +1,4 @@
-import { Skill, Tool, Session, Status, AppConfig, Message, UploadedFile, Memory, User, TokenResponse, AuthStatus } from '../types';
+import { Skill, Tool, Session, Status, AppConfig, Message, UploadedFile, User, TokenResponse, AuthStatus } from '../types';
 
 const API_BASE = '/api';
 
@@ -195,49 +195,6 @@ export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
     body: JSON.stringify(config),
   });
   if (!response.ok) throw new Error('Failed to update config');
-}
-
-// ==================== 记忆管理 API ====================
-
-export async function getMemories(userId: string = 'default'): Promise<{ memories: Memory[]; count: number }> {
-  const response = await authFetch(`${API_BASE}/memories?user_id=${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch memories');
-  return response.json();
-}
-
-export async function addMemory(content: string, userId: string = 'default'): Promise<{ status: string; result: any }> {
-  const response = await authFetch(`${API_BASE}/memories`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content, user_id: userId }),
-  });
-  if (!response.ok) throw new Error('Failed to add memory');
-  return response.json();
-}
-
-export async function updateMemory(memoryId: string, content: string): Promise<{ status: string }> {
-  const response = await authFetch(`${API_BASE}/memories/${memoryId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
-  });
-  if (!response.ok) throw new Error('Failed to update memory');
-  return response.json();
-}
-
-export async function deleteMemory(memoryId: string): Promise<void> {
-  const response = await authFetch(`${API_BASE}/memories/${memoryId}`, { method: 'DELETE' });
-  if (!response.ok) throw new Error('Failed to delete memory');
-}
-
-export async function searchMemories(query: string, userId: string = 'default', limit: number = 10): Promise<{ results: Memory[]; count: number }> {
-  const response = await authFetch(`${API_BASE}/memories/search`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, user_id: userId, limit }),
-  });
-  if (!response.ok) throw new Error('Failed to search memories');
-  return response.json();
 }
 
 // ==================== Prompt 管理 API ====================

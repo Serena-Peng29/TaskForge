@@ -68,29 +68,6 @@ class HistoryResponse(BaseModel):
     count: int
 
 
-class MemoryItem(BaseModel):
-    id: str
-    memory: str
-    user_id: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-
-
-class MemoryAddRequest(BaseModel):
-    content: str
-    user_id: str = "default"
-
-
-class MemorySearchRequest(BaseModel):
-    query: str
-    user_id: str = "default"
-    limit: int = 10
-
-
-class MemoryUpdateRequest(BaseModel):
-    content: str
-
-
 class UserRegister(BaseModel):
     username: str
     password: str

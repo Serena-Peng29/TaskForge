@@ -1,10 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useChat } from './hooks/useChat';
 import { useAuth } from './hooks/useAuth';
 import { ChatWindow } from './components/ChatWindow';
 import { Sidebar } from './components/Sidebar';
 import { FilePanel } from './components/FilePanel';
-import { MemoryPanel } from './components/MemoryPanel';
 import { LoginModal } from './components/LoginModal';
 import { UploadedFile } from './types';
 
@@ -52,19 +51,6 @@ function App() {
 
   // 上传文件状态
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-
-  // 记忆刷新触发器
-  const [memoryRefreshKey, setMemoryRefreshKey] = useState(0);
-  const prevIsStreamingRef = useRef(isStreaming);
-
-  // 对话结束时刷新记忆
-  useEffect(() => {
-    if (prevIsStreamingRef.current && !isStreaming) {
-      // isStreaming 从 true 变为 false，对话结束
-      setMemoryRefreshKey(prev => prev + 1);
-    }
-    prevIsStreamingRef.current = isStreaming;
-  }, [isStreaming]);
 
   // Initial load - only when authenticated
   useEffect(() => {
@@ -193,7 +179,6 @@ function App() {
         onRemoveFile={handleRemoveFile}
         onClearAll={handleClearFiles}
       />
-      <MemoryPanel refreshKey={memoryRefreshKey} />
     </div>
   );
 }

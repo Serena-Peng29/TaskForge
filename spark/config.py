@@ -8,16 +8,10 @@ import json
 
 
 @dataclass
-class MemoryConfig:
-    """记忆系统配置"""
+class QdrantConfig:
+    """Qdrant 配置，用于认证用户存储"""
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
-    collection_name: str = "toymagic_memories"
-    enable_auto_extract: bool = True
-    # Embedding 配置
-    embedder_api_key: str = ""
-    embedder_model: str = "text-embedding-v4"
-    embedder_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
 @dataclass
@@ -110,8 +104,8 @@ class Config:
     server_host: str = "0.0.0.0"
     server_port: int = 8000
     cors_origins: list = field(default_factory=lambda: ["*"])
-    # Memory 配置
-    memory_config: MemoryConfig = field(default_factory=MemoryConfig)
+    # Qdrant 配置
+    qdrant_config: QdrantConfig = field(default_factory=QdrantConfig)
     # Web Search 配置
     web_search_config: WebSearchConfig = field(default_factory=WebSearchConfig)
     # MCP 配置
@@ -201,17 +195,12 @@ class Config:
                     if server_config.get("cors_origins"):
                         self.cors_origins = server_config["cors_origins"]
 
-                    # Memory 配置
-                    memory_config = data.get("memory", {})
-                    if memory_config:
-                        self.memory_config = MemoryConfig(
-                            qdrant_host=memory_config.get("qdrant_host", "localhost"),
-                            qdrant_port=memory_config.get("qdrant_port", 6333),
-                            collection_name=memory_config.get("collection_name", "toymagic_memories"),
-                            enable_auto_extract=memory_config.get("enable_auto_extract", True),
-                            embedder_api_key=memory_config.get("embedder_api_key", ""),
-                            embedder_model=memory_config.get("embedder_model", "text-embedding-v4"),
-                            embedder_base_url=memory_config.get("embedder_base_url", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+                    # Qdrant 配置。兼容旧的 memory 配置块，但不再提供长期记忆功能。
+                    qdrant_config = data.get("qdrant") or data.get("memory", {})
+                    if qdrant_config:
+                        self.qdrant_config = QdrantConfig(
+                            qdrant_host=qdrant_config.get("qdrant_host", "localhost"),
+                            qdrant_port=qdrant_config.get("qdrant_port", 6333)
                         )
 
                     # Web Search 配置

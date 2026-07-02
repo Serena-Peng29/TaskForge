@@ -65,7 +65,7 @@ python main.py --web
 │   ├── app.py             # FastAPI app 组装
 │   ├── deps.py            # 共享依赖、认证和状态上下文
 │   ├── schemas.py         # Pydantic 模型
-│   └── routers/           # auth/chat/config/mcp/memory/session 路由
+│   └── routers/           # auth/chat/config/mcp/session 路由
 ├── tools/                 # 工具系统
 │   ├── base.py            # 工具基类和注册表
 │   ├── builtin.py         # 内置工具

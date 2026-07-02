@@ -159,15 +159,6 @@ export interface UploadedFile {
   uploadedAt: number;  // 上传时间戳
 }
 
-export interface Memory {
-  id: string;
-  memory: string;
-  user_id: string;
-  created_at?: string;
-  updated_at?: string;
-  score?: number;  // 搜索时的相关度分数
-}
-
 // ==================== 认证相关类型 ====================
 
 export interface User {
