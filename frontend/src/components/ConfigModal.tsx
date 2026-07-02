@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Skill, Tool, AppConfig, MODEL_PROVIDERS } from '../types';
-import { X, Check, Cpu, BookOpen, Wrench, Key, Globe, Thermometer } from 'lucide-react';
+import { X, Check, Cpu, BookOpen, Wrench, Key, Globe, Thermometer, Folder } from 'lucide-react';
 
 interface ConfigModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ export function ConfigModal({
   const [apiKey, setApiKey] = useState<string>('');
   const [baseUrl, setBaseUrl] = useState<string>('');
   const [temperature, setTemperature] = useState<number>(0.7);
+  const [workspaceDir, setWorkspaceDir] = useState<string>('');
 
   // 技能/工具选择状态
   const [enabledItems, setEnabledItems] = useState<Set<string>>(new Set());
@@ -40,6 +41,7 @@ export function ConfigModal({
       setApiKey('');
       setBaseUrl(config.base_url || '');
       setTemperature(config.temperature ?? 0.7);
+      setWorkspaceDir(config.workspace_dir || '');
       setEnabledItems(new Set(
         type === 'skills' ? config.enabled_skills : config.enabled_tools
       ));
@@ -94,6 +96,7 @@ export function ConfigModal({
           model: selectedModel,
           base_url: baseUrl,
           temperature,
+          workspace_dir: workspaceDir.trim(),
         };
         if (apiKey.trim()) {
           nextConfig.api_key = apiKey.trim();
@@ -253,6 +256,21 @@ export function ConfigModal({
                   <span>精确 (0)</span>
                   <span>创意 (2)</span>
                 </div>
+              </div>
+
+              {/* Workspace */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
+                  <Folder className="w-4 h-4" />
+                  项目目录
+                </label>
+                <input
+                  type="text"
+                  value={workspaceDir}
+                  onChange={(e) => setWorkspaceDir(e.target.value)}
+                  placeholder="/Users/you/path/to/project"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 font-mono text-sm"
+                />
               </div>
             </div>
           )}

@@ -31,6 +31,11 @@ class AppState:
     custom_system_prompt = None
     mcp_manager = None
 
+    def reset_runtime(self, config):
+        self.agent_client = AgentClient(config)
+        self.current_model = config.model
+        self.mcp_manager = get_mcp_manager(config.workdir / "mcp_config.json")
+
 
 state = AppState()
 
@@ -100,12 +105,14 @@ def create_app() -> FastAPI:
     from api.routers.sessions import router as sessions_router
     from api.routers.mcp import router as mcp_router
     from api.routers.general import router as general_router
+    from api.routers.workspaces import router as workspaces_router
     from api.routers.chat import router as chat_router
 
     app.include_router(auth_router)
     app.include_router(sessions_router)
     app.include_router(mcp_router)
     app.include_router(general_router)
+    app.include_router(workspaces_router)
     app.include_router(chat_router)
 
     return app

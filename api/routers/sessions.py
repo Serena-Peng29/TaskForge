@@ -39,8 +39,17 @@ async def get_session(session_id: str, current_user: Optional[Dict[str, Any]] = 
 @router.post("/new", response_model=SessionInfo)
 async def create_new_session(request: SessionCreate = None, current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)):
     user_id = _get_user_id(current_user)
+    current_state = get_state_for_user(current_user)
+
+    if current_state.current_session_id and len(current_state.history) > 1:
+        MEMORY.save_session_by_id(current_state.current_session_id, current_state.history, user_id)
+
     title = request.title if request else None
     session_id = MEMORY.create_session(title, user_id)
+    current_state.current_session_id = session_id
+    set_current_state(current_state)
+    current_state.history = [{"role": "system", "content": get_system_prompt()}]
+
     for s in MEMORY.list_sessions(user_id):
         if s.id == session_id:
             return SessionInfo(id=s.id, title=s.title, created_at=s.created_at, updated_at=s.updated_at, message_count=s.message_count)

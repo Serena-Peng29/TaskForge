@@ -12,7 +12,7 @@ export function useChat() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [currentContent, setCurrentContent] = useState('');
-  const [currentToolCalls, setCurrentToolCalls] = useState<Map<number, ToolCall>>(new Map());
+  const [currentToolCalls, setCurrentToolCalls] = useState<Map<string, ToolCall>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // ==================== 加载函数 ====================
@@ -66,17 +66,56 @@ export function useChat() {
   const loadHistory = useCallback(async () => {
     try {
       const data = await api.getHistory();
-      const formattedMessages: Message[] = data.messages.map((msg: any, idx: number) => ({
-        id: `msg-${idx}-${Date.now()}`,
-        role: msg.role,
-        content: msg.content || '',
-        timestamp: Date.now() + idx,
-      }));
+      const toolCallsById = new Map<string, { name: string; args: string }>();
+      const formattedMessages: Message[] = data.messages.map((msg: any, idx: number) => {
+        if (msg.role === 'assistant' && Array.isArray(msg.tool_calls)) {
+          for (const toolCall of msg.tool_calls) {
+            if (toolCall.id && toolCall.function?.name) {
+              toolCallsById.set(toolCall.id, {
+                name: toolCall.function.name,
+                args: toolCall.function.arguments || '',
+              });
+            }
+          }
+        }
+        const sourceToolCall = msg.role === 'tool' ? toolCallsById.get(msg.tool_call_id) : undefined;
+
+        return {
+          id: `msg-${idx}-${Date.now()}`,
+          role: msg.role,
+          content: msg.content || '',
+          toolCalls: undefined,
+          toolResult: msg.role === 'tool'
+            ? {
+              name: sourceToolCall?.name || 'tool',
+              args: sourceToolCall?.args,
+              result: msg.content || '',
+            }
+            : undefined,
+          timestamp: Date.now() + idx,
+        };
+      });
       setMessages(formattedMessages);
     } catch (error) {
       console.error('Failed to load history:', error);
     }
   }, []);
+
+  const loadLastSession = useCallback(async () => {
+    try {
+      const result = await api.loadLastSession();
+      if (result.session_id) {
+        setCurrentSessionId(result.session_id);
+      }
+      await loadHistory();
+      await loadStatus();
+      return result;
+    } catch (error) {
+      console.error('Failed to load last session:', error);
+      await loadHistory();
+      return null;
+    }
+  }, [loadHistory, loadStatus]);
 
   // ==================== 会话管理 ====================
 
@@ -179,7 +218,8 @@ export function useChat() {
     abortControllerRef.current = new AbortController();
 
     let fullContent = '';
-    const toolCalls = new Map<number, ToolCall>();
+    const toolCalls = new Map<string, ToolCall>();
+    const indexToId = new Map<number, string>();
 
     try {
       await api.sendChatMessage(
@@ -190,7 +230,8 @@ export function useChat() {
             setCurrentContent(fullContent);
           },
           onToolStart: (index, id) => {
-            toolCalls.set(index, {
+            indexToId.set(index, id);
+            toolCalls.set(id, {
               id,
               name: '',
               args: '',
@@ -199,7 +240,8 @@ export function useChat() {
             setCurrentToolCalls(new Map(toolCalls));
           },
           onToolName: (index, name) => {
-            const tc = toolCalls.get(index);
+            const id = indexToId.get(index);
+            const tc = id ? toolCalls.get(id) : undefined;
             if (tc) {
               tc.name = name;
               tc.status = 'executing';
@@ -207,25 +249,29 @@ export function useChat() {
             }
           },
           onToolArgs: (index, args) => {
-            const tc = toolCalls.get(index);
+            const id = indexToId.get(index);
+            const tc = id ? toolCalls.get(id) : undefined;
             if (tc) {
               tc.args += args;
               setCurrentToolCalls(new Map(toolCalls));
             }
           },
-          onToolExecute: (name) => {
+          onToolExecute: (name, args) => {
             // Mark tool as executing
             for (const [, tc] of toolCalls) {
-              if (tc.name === name) {
+              if (tc.name === name && tc.status !== 'done') {
                 tc.status = 'executing';
+                if (!tc.args && args) {
+                  tc.args = JSON.stringify(args);
+                }
                 break;
               }
             }
             setCurrentToolCalls(new Map(toolCalls));
           },
-          onToolResult: (name, result) => {
+          onToolResult: (name, result, id) => {
             for (const [, tc] of toolCalls) {
-              if (tc.name === name) {
+              if ((id && tc.id === id) || (!id && tc.name === name && tc.status !== 'done')) {
                 tc.result = result;
                 tc.status = 'done';
                 break;
@@ -234,11 +280,17 @@ export function useChat() {
             setCurrentToolCalls(new Map(toolCalls));
           },
           onDone: (content) => {
+            for (const [, tc] of toolCalls) {
+              if (tc.status !== 'done') {
+                tc.status = 'done';
+              }
+            }
             const assistantMessage: Message = {
               id: assistantId,
               role: 'assistant',
               content: content || fullContent,
-              toolCalls: Array.from(toolCalls.values()),
+              toolCalls: Array.from(toolCalls.values()).filter(tool => tool.name),
+              toolCollapsed: true,
               timestamp: Date.now(),
             };
             setMessages(prev => [...prev, assistantMessage]);
@@ -299,6 +351,7 @@ export function useChat() {
     loadStatus,
     loadHistory,
     loadSessions,
+    loadLastSession,
     loadConfig,
     // 会话管理
     createNewSession,

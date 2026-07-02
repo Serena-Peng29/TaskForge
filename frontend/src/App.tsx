@@ -5,7 +5,8 @@ import { ChatWindow } from './components/ChatWindow';
 import { Sidebar } from './components/Sidebar';
 import { FilePanel } from './components/FilePanel';
 import { LoginModal } from './components/LoginModal';
-import { UploadedFile } from './types';
+import { PermissionMode, UploadedFile, Workspace } from './types';
+import * as api from './api/client';
 
 function App() {
   const {
@@ -30,6 +31,7 @@ function App() {
     currentSessionId,
     config,
     currentContent,
+    currentToolCalls,
     // 聊天功能
     sendMessage,
     stopStreaming,
@@ -39,6 +41,7 @@ function App() {
     loadStatus,
     loadHistory,
     loadSessions,
+    loadLastSession,
     loadConfig,
     // 会话管理
     createNewSession,
@@ -51,6 +54,18 @@ function App() {
 
   // 上传文件状态
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+
+  const activeWorkspace = workspaces.find(workspace => workspace.is_active) || null;
+
+  const loadWorkspaces = async () => {
+    try {
+      const data = await api.getWorkspaces();
+      setWorkspaces(data);
+    } catch (error) {
+      console.error('Failed to load workspaces:', error);
+    }
+  };
 
   // Initial load - only when authenticated
   useEffect(() => {
@@ -59,11 +74,34 @@ function App() {
       loadTools();
       loadStatus();
       loadConfig();
-      loadSessions().then(() => {
-        loadHistory();
+      loadWorkspaces();
+      loadSessions().then(async () => {
+        await loadLastSession();
+        await loadSessions();
       });
     }
-  }, [isAuthenticated, loadSkills, loadTools, loadStatus, loadHistory, loadSessions, loadConfig]);
+  }, [isAuthenticated, loadSkills, loadTools, loadStatus, loadLastSession, loadSessions, loadConfig]);
+
+  const handleAddWorkspace = async (path: string) => {
+    await api.addWorkspace(path, 'manual');
+    await loadWorkspaces();
+    await loadConfig();
+  };
+
+  const handleSelectWorkspace = async (workspaceId: string) => {
+    await api.activateWorkspace(workspaceId);
+    await loadWorkspaces();
+    await loadConfig();
+    await loadHistory();
+    await loadStatus();
+  };
+
+  const handlePermissionChange = async (mode: PermissionMode) => {
+    if (!activeWorkspace) return;
+    await api.updateWorkspace(activeWorkspace.id, { permission_mode: mode });
+    await loadWorkspaces();
+    await loadConfig();
+  };
 
   const handleCreateSession = async () => {
     try {
@@ -169,10 +207,16 @@ function App() {
         messages={messages}
         isStreaming={isStreaming}
         currentContent={currentContent}
+        currentToolCalls={Array.from(currentToolCalls.values())}
         onSend={handleSend}
         onStop={stopStreaming}
         uploadedFiles={uploadedFiles}
         onFilesChange={setUploadedFiles}
+        workspaces={workspaces}
+        activeWorkspace={activeWorkspace}
+        onAddWorkspace={handleAddWorkspace}
+        onSelectWorkspace={handleSelectWorkspace}
+        onPermissionChange={handlePermissionChange}
       />
       <FilePanel
         files={uploadedFiles}

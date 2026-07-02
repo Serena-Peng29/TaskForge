@@ -18,7 +18,7 @@ MEMORY = get_memory()
 
 def get_system_prompt() -> str:
     return DEFAULT_SYSTEM_PROMPT.format(
-        workdir=str(CONFIG.workdir),
+        workdir=str(CONFIG.workspace_dir or CONFIG.workdir),
         skills=SKILLS.get_descriptions(),
         agents=get_agent_descriptions(),
     )
@@ -29,7 +29,7 @@ def print_banner() -> None:
     print("=" * 60)
     print("  TaskForge v3.0 (Async / Tools Framework / Skills)")
     print("=" * 60)
-    print(f"  Workspace: {CONFIG.workdir}")
+    print(f"  Workspace: {CONFIG.workspace_dir or CONFIG.workdir}")
     print(f"  Output:    {CONFIG.output_dir}")
     print(f"  Model:     {CONFIG.model}")
     print(f"  Skills:    {', '.join(SKILLS.list_skills()) or 'none'}")

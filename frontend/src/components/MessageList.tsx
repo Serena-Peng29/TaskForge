@@ -1,23 +1,40 @@
 import { useEffect, useRef } from 'react';
-import { Message } from '../types';
+import { Message, ToolCall } from '../types';
 import { MessageItem } from './MessageItem';
-import { Loader2 } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
   isStreaming: boolean;
   currentContent: string;
+  currentToolCalls: ToolCall[];
 }
 
-export function MessageList({ messages, isStreaming, currentContent }: MessageListProps) {
+export function MessageList({ messages, isStreaming, currentContent, currentToolCalls }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const displayMessages = compactToolMessages(messages);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, currentContent]);
+  }, [messages, currentContent, currentToolCalls]);
+
+  const streamingMessage: Message | null = isStreaming && (currentContent || currentToolCalls.length > 0)
+    ? {
+      id: 'streaming-assistant',
+      role: 'assistant',
+      content: currentContent,
+      toolCalls: currentToolCalls,
+      activity: currentContent
+        ? '正在整理回答'
+        : currentToolCalls.length > 0
+          ? '正在调用工具'
+          : '正在思考',
+      toolCollapsed: false,
+      timestamp: Date.now(),
+    }
+    : null;
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
       {messages.length === 0 && !isStreaming && (
         <div className="flex items-center justify-center h-full text-gray-500">
           <div className="text-center">
@@ -27,37 +44,89 @@ export function MessageList({ messages, isStreaming, currentContent }: MessageLi
         </div>
       )}
 
-      {messages.map((message) => (
+      {displayMessages.map((message) => (
         <MessageItem key={message.id} message={message} />
       ))}
 
-      {/* Streaming content */}
-      {isStreaming && currentContent && (
-        <div className="flex gap-3 p-4 bg-gray-900">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-600">
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="markdown-content text-gray-100 whitespace-pre-wrap">
-              {currentContent}
-            </div>
-          </div>
-        </div>
-      )}
+      {streamingMessage && <MessageItem message={streamingMessage} />}
 
-      {/* Loading indicator */}
-      {isStreaming && !currentContent && (
-        <div className="flex gap-3 p-4 bg-gray-900">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-600">
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-gray-400">Thinking...</div>
-          </div>
-        </div>
+      {isStreaming && !streamingMessage && (
+        <MessageItem
+          message={{
+            id: 'streaming-thinking',
+            role: 'assistant',
+            content: '',
+            activity: '正在思考',
+            timestamp: Date.now(),
+          }}
+        />
       )}
 
       <div ref={bottomRef} />
     </div>
   );
+}
+
+function compactToolMessages(messages: Message[]): Message[] {
+  const result: Message[] = [];
+  let pendingTools: ToolCall[] = [];
+
+  const flushPendingTools = (timestamp = Date.now()) => {
+    if (pendingTools.length === 0) return;
+    result.push({
+      id: `tool-group-${result.length}-${timestamp}`,
+      role: 'assistant',
+      content: '',
+      toolCalls: pendingTools,
+      toolCollapsed: true,
+      timestamp,
+    });
+    pendingTools = [];
+  };
+
+  const toolFromMessage = (message: Message): ToolCall => ({
+    id: message.id,
+    name: message.toolResult?.name || 'tool',
+    args: message.toolResult?.args || '',
+    result: message.toolResult?.result || message.content,
+    status: 'done',
+  });
+
+  for (const message of messages) {
+    if (message.role === 'user') {
+      flushPendingTools(message.timestamp - 1);
+      result.push(message);
+      continue;
+    }
+
+    if (message.role === 'tool') {
+      pendingTools.push(toolFromMessage(message));
+      continue;
+    }
+
+    if (message.role === 'assistant') {
+      const hasContent = message.content.trim().length > 0;
+      const tools = [...pendingTools, ...(message.toolCalls || [])];
+
+      if (!hasContent) {
+        pendingTools = tools;
+        continue;
+      }
+
+      result.push({
+        ...message,
+        toolCalls: tools.length > 0 ? tools : undefined,
+        toolCollapsed: tools.length > 0 ? true : message.toolCollapsed,
+      });
+      pendingTools = [];
+      continue;
+    }
+
+    flushPendingTools(message.timestamp - 1);
+    result.push(message);
+  }
+
+  flushPendingTools();
+
+  return result;
 }

@@ -4,6 +4,7 @@
 import pytest
 from pathlib import Path
 from tools.base import BaseTool, ToolResult, ToolRegistry
+from tools.builtin import EditFileTool, WriteFileTool
 
 
 class MockTool(BaseTool):
@@ -94,3 +95,33 @@ class TestToolResult:
         """测试错误结果"""
         result = ToolResult(success=False, content="", error="Failed")
         assert str(result) == "Error: Failed"
+
+
+class TestWorkspaceFileTools:
+    """工作区文件工具测试"""
+
+    def test_write_file_writes_inside_workspace(self, tmp_path: Path):
+        tool = WriteFileTool(tmp_path)
+
+        result = tool.execute("src/example.txt", "hello")
+
+        assert result.success is True
+        assert (tmp_path / "src" / "example.txt").read_text(encoding="utf-8") == "hello"
+
+    def test_edit_file_edits_workspace_file(self, tmp_path: Path):
+        target = tmp_path / "app.py"
+        target.write_text("print('old')", encoding="utf-8")
+        tool = EditFileTool(tmp_path)
+
+        result = tool.execute("app.py", "old", "new")
+
+        assert result.success is True
+        assert target.read_text(encoding="utf-8") == "print('new')"
+
+    def test_write_file_rejects_path_escape(self, tmp_path: Path):
+        tool = WriteFileTool(tmp_path)
+
+        result = tool.execute("../outside.txt", "nope")
+
+        assert result.success is False
+        assert "Path escapes workspace" in result.error

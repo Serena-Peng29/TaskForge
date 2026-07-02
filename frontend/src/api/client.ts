@@ -1,4 +1,4 @@
-import { Skill, Tool, Session, Status, AppConfig, Message, UploadedFile, User, TokenResponse, AuthStatus } from '../types';
+import { Skill, Tool, Session, Status, AppConfig, Message, UploadedFile, User, TokenResponse, AuthStatus, Workspace, PermissionMode } from '../types';
 
 const API_BASE = '/api';
 
@@ -172,6 +172,12 @@ export async function renameSession(sessionId: string, title: string): Promise<v
   if (!response.ok) throw new Error('Failed to rename session');
 }
 
+export async function loadLastSession(): Promise<{ status: string; session_id?: string; message_count?: number }> {
+  const response = await authFetch(`${API_BASE}/load`, { method: 'POST' });
+  if (!response.ok) throw new Error('Failed to load last session');
+  return response.json();
+}
+
 // ==================== 工具管理 API ====================
 
 export async function getTools(): Promise<Tool[]> {
@@ -195,6 +201,61 @@ export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
     body: JSON.stringify(config),
   });
   if (!response.ok) throw new Error('Failed to update config');
+}
+
+// ==================== 工作区 API ====================
+
+export async function getWorkspaces(): Promise<Workspace[]> {
+  const response = await authFetch(`${API_BASE}/workspaces`);
+  if (!response.ok) throw new Error('Failed to fetch workspaces');
+  return response.json();
+}
+
+export async function addWorkspace(path: string, permissionMode: PermissionMode = 'manual'): Promise<Workspace> {
+  const response = await authFetch(`${API_BASE}/workspaces`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, permission_mode: permissionMode }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to add workspace');
+  }
+  return response.json();
+}
+
+export async function pickWorkspaceDirectory(): Promise<{ path: string | null; cancelled: boolean }> {
+  const response = await authFetch(`${API_BASE}/workspaces/pick-directory`, { method: 'POST' });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to pick workspace directory');
+  }
+  return response.json();
+}
+
+export async function activateWorkspace(workspaceId: string): Promise<Workspace> {
+  const response = await authFetch(`${API_BASE}/workspaces/${workspaceId}/activate`, { method: 'POST' });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to activate workspace');
+  }
+  return response.json();
+}
+
+export async function updateWorkspace(
+  workspaceId: string,
+  update: { name?: string; permission_mode?: PermissionMode; allowed_tools?: string[] }
+): Promise<Workspace> {
+  const response = await authFetch(`${API_BASE}/workspaces/${workspaceId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(update),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to update workspace');
+  }
+  return response.json();
 }
 
 // ==================== Prompt 管理 API ====================
@@ -312,7 +373,7 @@ export interface ChatCallbacks {
   onToolName: (index: number, name: string) => void;
   onToolArgs: (index: number, args: string) => void;
   onToolExecute: (name: string, args: Record<string, unknown>) => void;
-  onToolResult: (name: string, result: string) => void;
+  onToolResult: (name: string, result: string, id?: string) => void;
   onDone: (content: string) => void;
   onError: (error: string) => void;
 }
@@ -426,7 +487,7 @@ function handleSSEEvent(
       callbacks.onToolExecute(data.name as string, data.args as Record<string, unknown>);
       break;
     case 'tool_result':
-      callbacks.onToolResult(data.name as string, data.result as string);
+      callbacks.onToolResult(data.name as string, data.result as string, data.id as string | undefined);
       break;
     case 'done':
       callbacks.onDone(data.content as string);

@@ -242,6 +242,11 @@ class AgentClient:
         logger.debug(f"Executing tool: {name} with args: {list(args.keys())}")
 
         with ErrorContext("tool_execution", tool=name, args=args):
+            permission_error = self._check_tool_permission(name)
+            if permission_error:
+                logger.warning(f"Tool {name} blocked by permission mode: {permission_error}")
+                return f"Error: {permission_error}"
+
             result = TOOLS.execute(name, args)
 
             if result.success:
@@ -251,6 +256,27 @@ class AgentClient:
                 logger.warning(f"Tool {name} failed: {result.error}")
                 return f"Error: {result.error}"
 
+    def _check_tool_permission(self, name: str) -> str | None:
+        """根据当前工作区权限模式判断工具是否可执行。"""
+        mode = getattr(self.config, "permission_mode", "manual")
+        allowed_tools = set(getattr(self.config, "allowed_tools", []) or [])
+        read_only_tools = {"read_file", "Skill", "TodoWrite"}
+
+        if mode == "auto":
+            return None
+        if mode == "allowlist":
+            if name in allowed_tools:
+                return None
+            return f"Tool '{name}' is not in the workspace allowlist."
+        if mode == "manual":
+            if name in read_only_tools:
+                return None
+            return (
+                f"Tool '{name}' requires manual approval. "
+                "Manual approval mode currently allows only read-only tools."
+            )
+        return f"Unknown permission mode: {mode}"
+
     def run_subagent(self, description: str, prompt: str, agent_type: str) -> str:
         """运行子代理任务"""
         if agent_type not in AGENT_TYPES:
@@ -258,7 +284,8 @@ class AgentClient:
             return f"Error: Unknown agent type '{agent_type}'. Available: {available}"
 
         config = AGENT_TYPES[agent_type]
-        sub_system = f"""You are a {agent_type} subagent at {self.config.workdir}.
+        workspace = self.config.workspace_dir or self.config.workdir
+        sub_system = f"""You are a {agent_type} subagent at {workspace}.
 {config.system_prompt}
 Complete the task and return a clear, concise summary."""
 

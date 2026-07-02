@@ -42,6 +42,13 @@ class UserState:
         """更新最后活动时间"""
         self.last_active = time.time()
 
+    def reset_runtime(self, config: Config) -> None:
+        """根据当前配置重建 Agent 和 MCP 运行时"""
+        self.agent_client = AgentClient(config)
+        self.current_model = config.model
+        mcp_config_path = config.workdir / "mcp_config.json"
+        self.mcp_manager = MCPManager(mcp_config_path)
+
 
 class StateManager:
     """
@@ -58,13 +65,8 @@ class StateManager:
         """获取用户状态，如果不存在则创建"""
         if user_id not in self._states:
             state = UserState(user_id=user_id)
-            state.agent_client = AgentClient(self.config)
-            state.current_model = self.config.model
             state.history = []
-
-            # 初始化 MCP 管理器（共享配置）
-            mcp_config_path = self.config.workdir / "mcp_config.json"
-            state.mcp_manager = MCPManager(mcp_config_path)
+            state.reset_runtime(self.config)
 
             self._states[user_id] = state
             logger.info(f"Created new state for user: {user_id}")

@@ -17,6 +17,12 @@ agent:
   max_subagent_iterations: 20
   command_timeout: 60
 
+# Workspace Configuration
+# TaskForge reads/writes and runs tools inside this project directory.
+# Leave empty to use the directory where TaskForge is started.
+workspace:
+  path: ""
+
 # Logging Configuration
 logging:
   level: "INFO"

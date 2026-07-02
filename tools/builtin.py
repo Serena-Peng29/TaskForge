@@ -98,24 +98,18 @@ class ReadFileTool(BaseTool):
         """验证并返回安全的文件路径"""
         # 基础校验：防止跳出工作区
         rel_path = Path(p).relative_to("/") if Path(p).is_absolute() else Path(p)
+        resolved = (self.workdir / rel_path).resolve()
 
         # 路径穿越检查
         if self.enable_validation:
-            resolved = (self.workdir / rel_path).resolve()
             try:
                 resolved.relative_to(self.workdir.resolve())
             except ValueError:
                 raise ValueError(f"Path escapes workspace: {p}")
 
         if for_write:
-            target_path = (self.output_dir / rel_path).resolve()
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-            return target_path
-        else:
-            modified_path = (self.output_dir / rel_path).resolve()
-            if modified_path.exists():
-                return modified_path
-            return (self.workdir / rel_path).resolve()
+            resolved.parent.mkdir(parents=True, exist_ok=True)
+        return resolved
 
     def get_schema(self) -> dict:
         return {
@@ -202,16 +196,15 @@ class WriteFileTool(BaseTool):
     def _safe_path(self, p: str) -> Path:
         """验证并返回安全的文件路径"""
         rel_path = Path(p).relative_to("/") if Path(p).is_absolute() else Path(p)
+        resolved = (self.workdir / rel_path).resolve()
 
         if self.enable_validation:
-            resolved = (self.output_dir / rel_path).resolve()
             try:
                 resolved.relative_to(self.workdir.resolve())
             except ValueError:
                 raise ValueError(f"Path escapes workspace: {p}")
-            return resolved
 
-        return (self.output_dir / rel_path).resolve()
+        return resolved
 
     def get_schema(self) -> dict:
         return {
@@ -510,10 +503,12 @@ Follow the instructions in the skill above to complete the user's task.""",
 
 def register_builtin_tools(config, todo_manager, skills_loader, agent_runner, agent_types):
     """注册内置工具"""
-    TOOLS.register(BashTool(config.workdir, config.command_timeout, config))
-    TOOLS.register(ReadFileTool(config.workdir, config.output_dir, config.enable_path_validation))
-    TOOLS.register(WriteFileTool(config.workdir, config.output_dir, config.enable_path_validation))
-    TOOLS.register(EditFileTool(config.workdir, config.output_dir, config.enable_path_validation))
+    TOOLS.clear()
+    workspace = config.workspace_dir or config.workdir
+    TOOLS.register(BashTool(workspace, config.command_timeout, config))
+    TOOLS.register(ReadFileTool(workspace, config.output_dir, config.enable_path_validation))
+    TOOLS.register(WriteFileTool(workspace, config.output_dir, config.enable_path_validation))
+    TOOLS.register(EditFileTool(workspace, config.output_dir, config.enable_path_validation))
     TOOLS.register(TodoWriteTool(todo_manager))
     TOOLS.register(TaskTool(agent_types, agent_runner))
     TOOLS.register(SkillTool(skills_loader))

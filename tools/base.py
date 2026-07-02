@@ -59,6 +59,10 @@ class ToolRegistry:
             return True
         return False
 
+    def clear(self) -> None:
+        """清空所有已注册工具"""
+        self._tools.clear()
+
     def get(self, name: str) -> Optional[BaseTool]:
         """获取工具"""
         return self._tools.get(name)

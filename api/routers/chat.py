@@ -77,10 +77,22 @@ def auto_save_session():
         logger.error(f"Failed to auto-save session: {e}")
 
 
+def ensure_current_session() -> str:
+    """确保当前状态绑定了一个可持久化会话。"""
+    current_state = get_current_state()
+    if current_state.current_session_id:
+        return current_state.current_session_id
+    user_id = getattr(current_state, 'user_id', 'default') or 'default'
+    current_state.current_session_id = MEMORY.create_session(None, user_id)
+    logger.info(f"Created session {current_state.current_session_id} before chat for user: {user_id}")
+    return current_state.current_session_id
+
+
 async def stream_chat_response(message: str) -> AsyncGenerator[dict, None]:
     from openai.types.chat import ChatCompletionMessageToolCall
 
     current_state = get_current_state()
+    ensure_current_session()
     current_state.history.append({"role": "user", "content": message})
     logger.info(f"User input: {message[:100]}...")
     yield {"event": "start", "data": json.dumps({"message": message})}
@@ -140,7 +152,7 @@ async def stream_chat_response(message: str) -> AsyncGenerator[dict, None]:
                 yield {"event": "tool_execute", "data": json.dumps({"name": func_name, "args": args})}
                 result = current_state.agent_client.execute_tool(func_name, args)
                 preview = result[:500] + "..." if len(result) > 500 else result
-                yield {"event": "tool_result", "data": json.dumps({"name": func_name, "result": preview})}
+                yield {"event": "tool_result", "data": json.dumps({"id": tool_call.id, "name": func_name, "result": preview})}
                 current_state.history.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
             async for event in stream_agent_loop():
@@ -222,7 +234,7 @@ async def stream_agent_loop() -> AsyncGenerator[dict, None]:
             yield {"event": "tool_execute", "data": json.dumps({"name": func_name, "args": args})}
             result = current_state.agent_client.execute_tool(func_name, args)
             preview = result[:500] + "..." if len(result) > 500 else result
-            yield {"event": "tool_result", "data": json.dumps({"name": func_name, "result": preview})}
+            yield {"event": "tool_result", "data": json.dumps({"id": tool_call.id, "name": func_name, "result": preview})}
             current_state.history.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
         async for event in stream_agent_loop():

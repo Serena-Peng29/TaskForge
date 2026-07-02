@@ -48,6 +48,15 @@ python main.py
 python main.py --web
 ```
 
+指定要操作的项目目录：
+
+```yaml
+workspace:
+  path: "/path/to/your/project"
+```
+
+也可以在前端「模型配置」里修改项目目录。TaskForge 的文件读取、写入和命令执行工具会在这个目录内工作。
+
 ## 项目结构
 
 ```

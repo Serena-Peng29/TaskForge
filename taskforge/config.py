@@ -85,6 +85,9 @@ def setup_logging(level: str = "INFO", log_format: str = "text", log_file: str =
 class Config:
     """集中配置管理 - 支持环境变量和配置文件"""
     workdir: Path = field(default_factory=Path.cwd)
+    workspace_dir: Optional[Path] = None
+    permission_mode: str = "manual"
+    allowed_tools: list[str] = field(default_factory=list)
     skills_dir: Optional[Path] = None
     output_dir: Optional[Path] = None
     api_key: str = ""
@@ -115,10 +118,12 @@ class Config:
 
     def __post_init__(self):
         # 设置工作目录相关路径
+        if self.workspace_dir is None:
+            self.workspace_dir = self.workdir
         if self.skills_dir is None:
             self.skills_dir = self.workdir / "skills"
         if self.output_dir is None:
-            self.output_dir = self.workdir / "output"
+            self.output_dir = self.workspace_dir / "output"
 
         # 加载配置（优先级：环境变量 > 配置文件 > 默认值）
         self._load_from_file()
@@ -157,6 +162,14 @@ class Config:
                     agent_config = data.get("agent", {})
                     log_config = data.get("logging", {})
                     security_config = data.get("security", {})
+
+                    workspace_config = data.get("workspace", {})
+                    if workspace_config.get("path"):
+                        self.set_workspace(workspace_config["path"], validate=False)
+                    if workspace_config.get("permission_mode"):
+                        self.permission_mode = workspace_config["permission_mode"]
+                    if workspace_config.get("allowed_tools"):
+                        self.allowed_tools = list(workspace_config["allowed_tools"])
 
                     if api_config.get("key"):
                         self.api_key = api_config["key"]
@@ -262,6 +275,13 @@ class Config:
                 else:
                     setattr(self, config_attr, value)
 
+        workspace_path = os.getenv("TASKFORGE_WORKSPACE") or os.getenv("AGENT_WORKDIR")
+        if workspace_path:
+            self.set_workspace(workspace_path, validate=False)
+        permission_mode = os.getenv("TASKFORGE_PERMISSION_MODE")
+        if permission_mode:
+            self.permission_mode = permission_mode
+
     def _validate(self):
         """验证必需配置"""
         errors = []
@@ -285,6 +305,35 @@ class Config:
             print("\nPlease create a config.yaml file (see config.example.yaml) "
                   "or set the required environment variables.")
             raise ValueError("Missing required configuration")
+
+        self.set_workspace(self.workspace_dir or self.workdir, validate=True)
+
+    def set_workspace(self, path: str | Path, validate: bool = True) -> Path:
+        """设置目标项目工作目录"""
+        workspace = Path(path).expanduser()
+        if not workspace.is_absolute():
+            workspace = (self.workdir / workspace).resolve()
+        else:
+            workspace = workspace.resolve()
+
+        if validate:
+            if not workspace.exists():
+                raise ValueError(f"Workspace does not exist: {workspace}")
+            if not workspace.is_dir():
+                raise ValueError(f"Workspace is not a directory: {workspace}")
+
+        self.workspace_dir = workspace
+        self.output_dir = workspace / "output"
+        return workspace
+
+    def set_permission(self, mode: str, allowed_tools: Optional[list[str]] = None) -> None:
+        """设置当前工作区工具权限模式"""
+        valid_modes = {"auto", "allowlist", "manual"}
+        if mode not in valid_modes:
+            raise ValueError(f"Invalid permission mode: {mode}")
+        self.permission_mode = mode
+        if allowed_tools is not None:
+            self.allowed_tools = list(dict.fromkeys(allowed_tools))
 
 
 # 延迟初始化配置

@@ -5,8 +5,11 @@ export interface Message {
   toolCalls?: ToolCall[];
   toolResult?: {
     name: string;
+    args?: string;
     result: string;
   };
+  activity?: string;
+  toolCollapsed?: boolean;
   timestamp: number;
 }
 
@@ -65,6 +68,20 @@ export interface AppConfig {
   temperature?: number;
   api_key?: string;
   base_url?: string;
+  workspace_dir: string;
+  permission_mode: PermissionMode;
+  allowed_tools: string[];
+}
+
+export type PermissionMode = 'auto' | 'allowlist' | 'manual';
+
+export interface Workspace {
+  id: string;
+  name: string;
+  path: string;
+  permission_mode: PermissionMode;
+  allowed_tools: string[];
+  is_active: boolean;
 }
 
 // 预设模型提供商

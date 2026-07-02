@@ -57,6 +57,9 @@ class ConfigUpdate(BaseModel):
     temperature: Optional[float] = None
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+    workspace_dir: Optional[str] = None
+    permission_mode: Optional[str] = None
+    allowed_tools: Optional[List[str]] = None
 
 
 class PromptUpdate(BaseModel):
@@ -109,6 +112,36 @@ class AppConfigResponse(BaseModel):
     temperature: float = 0.7
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+    workspace_dir: str
+    permission_mode: str = "manual"
+    allowed_tools: List[str] = []
+
+
+class WorkspaceInfo(BaseModel):
+    id: str
+    name: str
+    path: str
+    permission_mode: str
+    allowed_tools: List[str] = []
+    is_active: bool = False
+
+
+class WorkspaceCreate(BaseModel):
+    path: str
+    name: Optional[str] = None
+    permission_mode: str = "manual"
+    allowed_tools: List[str] = []
+
+
+class WorkspaceUpdate(BaseModel):
+    name: Optional[str] = None
+    permission_mode: Optional[str] = None
+    allowed_tools: Optional[List[str]] = None
+
+
+class DirectoryPickResponse(BaseModel):
+    path: Optional[str] = None
+    cancelled: bool = False
 
 
 class UploadResponse(BaseModel):

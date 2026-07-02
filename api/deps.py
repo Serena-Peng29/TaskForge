@@ -96,7 +96,7 @@ def get_system_prompt() -> str:
     current_state = get_current_state()
     template = current_state.custom_system_prompt or DEFAULT_SYSTEM_PROMPT
     return template.format(
-        workdir=str(CONFIG.workdir),
+        workdir=str(CONFIG.workspace_dir or CONFIG.workdir),
         skills=SKILLS.get_descriptions(),
         agents=get_agent_descriptions()
     )
